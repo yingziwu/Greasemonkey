@@ -2,9 +2,10 @@
 // @name        长毛象实例测速
 // @namespace   https://blog.bgme.me
 // @match       https://instances.social/list/old
-// @grant       GM.xmlHttpRequest
+// @grant       GM_xmlHttpRequest
+// @connect     *
 // @run-at      document-end
-// @version     1.0.1
+// @version     1.0.2
 // @author      bgme
 // @description 打开 instances.social Legacy列表后，点击右上角图标开始测试。为了结果的准确性，请至少进行三轮测试。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -109,7 +110,7 @@ function domainTest(node) {
     // 开始测试
     let startTime, endTime;
     startTime = (new Date()).getTime();
-    GM.xmlHttpRequest({
+    GM_xmlHttpRequest({
         method: "GET",
         url: url,
         onload(response) {

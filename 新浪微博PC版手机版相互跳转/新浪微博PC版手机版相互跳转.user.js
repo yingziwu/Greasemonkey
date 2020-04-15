@@ -74,16 +74,18 @@ function getMobileUri() {
 function jump() {
     let host = (new URL(document.URL)).host;
     switch (host) {
-        case 'm.weibo.cn':
+        case 'm.weibo.cn': {
             let webUri = getWebUri();
             console.log(webUri);
             window.open(webUri);
             break;
-        case 'weibo.com':
+        }
+        case 'weibo.com': {
             let mobileUri = getMobileUri();
             console.log(mobileUri);
             window.open(mobileUri);
             break;
+        }
     }
 }
 
