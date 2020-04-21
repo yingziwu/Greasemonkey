@@ -1,11 +1,16 @@
 // ==UserScript==
 // @name        新浪微博PC版手机版相互跳转
 // @namespace   https://blog.bgme.me
-// @match       https://m.weibo.cn/*
-// @match       https://weibo.com/*
+// @match       https://m.weibo.cn/status/*
+// @match       https://m.weibo.cn/detail/*
+// @match       https://weibo.com/*/*
+// @exclude     https://weibo.com/u/*
+// @exclude     https://weibo.com/p/*
+// @exclude     https://weibo.com/tv/*
+// @exclude     https://weibo.com/signup/*
 // @grant       none
 // @run-at      document-end
-// @version     1.0
+// @version     1.1
 // @author      bgme
 // @description 点击右上角按钮，跳转至当前微博电脑版/手机版
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -42,24 +47,43 @@ function addButton() {
 
 
 function getWebUri() {
-    const html = document.documentElement.innerHTML
-    const mid = html.match(/"mid":\s"(.*?)"/)[1]
-    const uid = html.match(/https:\/\/m\.weibo\.cn\/u\/(.*?)\?/)[1];
-    var id = "";
-    if (document.location.href.match(/^.*m\.weibo\.cn\/(status|detail)\/(\w+)\??.*$/i) && !/^\d+$/.test(RegExp.$2)) {
+    let script;
+    for (let s of document.querySelectorAll('body script')) {
+        if (s.innerText.length && !s.hasAttribute('src')) {
+            script = s;
+            break;
+        }
+    }
+    eval(script.innerText);
+    const juid = $render_data.status.user.id;
+    const jmid = $render_data.status.mid;
+
+    let uid = juid;
+    let mid = jmid;
+    if (document.querySelector('a.m-img-box')) {
+        const duid = document.querySelector('a.m-img-box').href.match(/\/(\d+)$/)[1];
+        if (duid != juid) { uid = duid; }
+    }
+    if (document.URL.match(/^.*m\.weibo\.cn\/(status|detail)\/(\d+)\??.*$/i)) {
+        const dmid = document.URL.match(/^.*m\.weibo\.cn\/(status|detail)\/(\d+)\??.*$/i)[2];
+        if (dmid != jmid) { mid = dmid; }
+    }
+
+    let id = "";
+    if (document.URL.match(/^.*m\.weibo\.cn\/(status|detail)\/(\w+)\??.*$/i) && !/^\d+$/.test(RegExp.$2)) {
         id = RegExp.$2;
     } else {
         id = WeiboUtil.mid2url(mid);
     }
+
     const href = `https://weibo.com/${uid}/${id}`;
     return href;
 }
 
 
 function getMobileUri() {
-    const html = document.documentElement.innerHTML
-    const uid = /uid=(\d+)/.exec(document.querySelector('.WB_face.W_fl > .opt').getAttribute('action-data'))[1];
     const id = document.URL.split('?')[0].split('/')[4];
+
     let mid = "";
     if (document.querySelector('div.WB_cardwrap.WB_feed_type')) {
         mid = document.querySelector('div.WB_cardwrap.WB_feed_type').getAttribute('mid');
