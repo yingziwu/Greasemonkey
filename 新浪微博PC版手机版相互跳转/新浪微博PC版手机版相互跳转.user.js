@@ -6,11 +6,12 @@
 // @match       https://weibo.com/*/*
 // @exclude     https://weibo.com/u/*
 // @exclude     https://weibo.com/p/*
+// @exclude     https://weibo.com/*/p/*
 // @exclude     https://weibo.com/tv/*
 // @exclude     https://weibo.com/signup/*
 // @grant       none
 // @run-at      document-end
-// @version     1.1
+// @version     1.1.1
 // @author      bgme
 // @description 点击右上角按钮，跳转至当前微博电脑版/手机版
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
