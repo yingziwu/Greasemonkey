@@ -11,7 +11,7 @@
 // @exclude     https://weibo.com/signup/*
 // @grant       none
 // @run-at      document-end
-// @version     1.1.1
+// @version     1.1.2
 // @author      bgme
 // @description 点击右上角按钮，跳转至当前微博电脑版/手机版
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -20,8 +20,10 @@
 // ==/UserScript==
 
 window.addEventListener('load', function () {
-    addButton()
+    addButton();
+    setTimeout(testPage, 500);
 })
+
 
 function addButton() {
     let img = document.createElement('img');
@@ -29,7 +31,8 @@ function addButton() {
     img.style.cssText = 'height: 35px;	width: 25px;';
 
     let button = document.createElement('button');
-    button.className = 'icon_pc';
+    button.id = 'weibo-pc-mobile-switch';
+    button.className = 'icon';
     button.style.cssText = `position: fixed;
                             top: 15%;
                             right: 5%;
@@ -40,12 +43,11 @@ function addButton() {
                             background-color: #fafafa;
                             border-radius: 50%;`
     button.onclick = function () {
-        jump()
+        jump();
     };
     button.appendChild(img);
     document.body.appendChild(button);
 }
-
 
 function getWebUri() {
     let script;
@@ -81,7 +83,6 @@ function getWebUri() {
     return href;
 }
 
-
 function getMobileUri() {
     const id = document.URL.split('?')[0].split('/')[4];
 
@@ -96,22 +97,33 @@ function getMobileUri() {
     return href;
 }
 
-function jump() {
+function getUrl() {
     let host = (new URL(document.URL)).host;
     switch (host) {
         case 'm.weibo.cn': {
             let webUri = getWebUri();
-            console.log(webUri);
-            window.open(webUri);
-            break;
+            return webUri;
         }
         case 'weibo.com': {
             let mobileUri = getMobileUri();
-            console.log(mobileUri);
-            window.open(mobileUri);
-            break;
+            return mobileUri;
         }
     }
+}
+
+function testPage() {
+    try {
+        getUrl();
+    } catch (error) {
+        console.error(error);
+        document.querySelector('#weibo-pc-mobile-switch').style.setProperty('display', 'none');
+    }
+}
+
+function jump() {
+    let url = getUrl();
+    console.log(url);
+    window.open(url);
 }
 
 /**
