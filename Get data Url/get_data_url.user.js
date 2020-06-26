@@ -5,7 +5,7 @@
 // @run-at      document-idle
 // @version     1.0
 // @author      bgme
-// @description Get data url
+// @description input resource url and get data url
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
 // @icon        -
 // @license     AGPL-3.0-or-later
