@@ -2,10 +2,11 @@
 // @name        小说下载器
 // @namespace   https://blog.bgme.me
 // @match       http://www.yruan.com/article/*.html
+// @match       https://www.jingcaiyuedu.com/novel/*/list.html
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
-// @run-at      document-idle
-// @version     1.0
+// @run-at      document-end
+// @version     1.0.1
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -27,18 +28,42 @@
 
 const rules = new Map([
     ["www.yruan.com", {
-        novelName() { return document.querySelector('#info > h1:nth-child(1)').innerText },
-        author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者:/, '') },
+        novelName() { return document.querySelector('#info > h1:nth-child(1)').innerText.trim() },
+        author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者:/, '').trim() },
         intro() { return walk(document.querySelector('#intro > p').childNodes[0], null, 0, '', document.createElement('div'))[0].trim() },
         linkList() { return document.querySelectorAll('div.box_con div#list dl dd a') },
         chapter_name: function(h) { return h.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
         content: function(h) { return h.querySelector('#content') },
     }],
+    ["www.jingcaiyuedu.com", {
+        novelName() { return document.querySelector('div.row.text-center.mb10 > h1:nth-child(1)').innerText.trim() },
+        author() { return document.querySelector('div.row.text-center.mb10 a[href^="/novel/"]').innerText.trim() },
+        intro: (async() => {
+            const indexUrl = document.location.href.replace(/\/list.html$/, '.html');
+            let intro = await fetch(indexUrl)
+                .then(response => response.text())
+                .then(text => {
+                    const h = (new DOMParser()).parseFromString(text, 'text/html');
+                    const introNode = h.querySelector('#bookIntro');
+                    let intro = walk(introNode.childNodes[0], null, 0, '', document.createElement('div'))[0].trim();
+                    return intro
+                });
+            return intro
+        }),
+        linkList() { return document.querySelectorAll('dd.col-md-4 > a') },
+        chapter_name: function(h) { return h.querySelector('h1.readTitle').innerText.trim() },
+        content: function(h) {
+            let c = h.querySelector('#htmlContent');
+            let ad = c.querySelector('p:nth-child(1)');
+            if (ad.innerText.includes('精彩小说网')) { ad.remove() }
+            return c
+        },
+    }],
 ]);
 const host = document.location.host;
 const rule = rules.get(host);
 
-window.addEventListener('load', function() {
+window.addEventListener('DOMContentLoaded', function() {
     if (rule.linkList()) { addButton() }
 })
 
@@ -53,7 +78,7 @@ function addButton() {
                         border-style: none;
                         text-align:center;
                         vertical-align:baseline;
-                        background-color: gray;
+                        background-color: rgba(128, 128, 128, 0.2);
                         padding: 5px;
                         border-radius: 12px;`;
 
@@ -64,6 +89,9 @@ function addButton() {
     button.onclick = function() {
         run(rule);
         img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAANSAAADUgEQACRKAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAUdQTFRF////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiYSOVQAAAGx0Uk5TAAECAwQFCAkKCwwNDhETFRkaHB0fICMkKCwwNTg5PD1AQUZKTk9QV1tcX2BjZGhtb3B2eHl6fX6AgYKHi4+QlJicnaChpamur7C3uru+v8LEyMzP0NXZ3N3f4OTn6uvt7/Hy8/T2+Pn6/P3+VI4wmgAAAyxJREFUeNrtmVdT4zAUhTFs6BB6Cb13WLpooffeQjW9hMT//3mVJbsT4li6ahbD6D4y5p5vzrGuFDkry5QpznLSygAYAANgAAyAATAABsAAGAADYAAMgAEwAD8XADlChTQTIM0eIM0pIM3vAdL8JiLNawFpXo1I8zxAmicS0jwTkeapjDTvC8r0gQQK9UEESvUBBIr1qQTK9SkESvR/wQkQ5V95KhS+Q1AC14N34ZCYenD0LGNjoH7ij2ejQV71QPd2lNQapI8rut0d4LMe0Bz4CHMUSetZCGgPMESRYj1cAGARMIqv1kMlgK8pNQq39TARBB8VhCgyW59S414y6frjxDYeUYTCNnnKHw4WeUxl1/wtGjwk97LToyBan6irmRrPfSHj/K+ZuSJ3TImCav3zaqvlvTN57T9W6+ozJAqa9fH9/gLS3kja/wr69+PUKMhGXUxVie0mVVMXZAUSwONys4ztvHn5kQcgttubJ+tEkde7G2MEiExUyD3VVExE4AAPS40qTlaNSw8QgI+dnlxVx8ncnp0PCsD5WJnaI23Z2Lk3wP1igx83jA2L998V4G8E5WrVy0kRfIeXMLkMm1TIN8GWYXIQTVbKVa+cjLCO4r2+fFnq+X17MZ7N6GmlxRJXt1pWnjh3Q1yX09Vi8tXTl/zb8eeB5GCgkFe9cOAgTutPBcD1stbGEYXVtvYCaA4BwHU9W8smXzt7DesMBMB1NFQMVS8eOgK3hQM4zut6ezZdPbt9/ZWhKQsArpu5OrJ83dwNW0dGAFzHwyVe6iXDx8zt2AEc522jI8etntOx8cbRjAcA1+18/Vf5+vlbvk6cALhORkr/qZeOnHC34QdwnPfNTvzjLtC5+S7QRAQg8eNuYcEW6yAIIF4GQD8A9W5IZX3eFQW6tqI61KNbXf9vy4K/T/2Wd90X+hqFnfHG1K8oUq1nuqpVZD3zjal865nvjBVY74pC/qpg/nYkNQqb6+uZrChYrFcQhcBnOwlR2KIfLoUGlIj1EgaUsPVCUcixnjcKmdZzRCHdeqYo1FgPjUKl9YAolFtPjMIf672i8NP6DFH4br2pH1d/AAm28mJJn9pPAAAAAElFTkSuQmCC';
+        this.onclick = function() {
+            alert('正在下载中，请耐心等待……');
+        }
     }
     button.appendChild(img);
     document.body.appendChild(button);
@@ -71,11 +99,10 @@ function addButton() {
 }
 
 function run(rule) {
-    const novelName = rule.novelName();
-    const author = rule.author();
-    const intro = rule.intro();
-    const infoText = `题名：${novelName}\n作者：${author}\n简介：${intro}\n来源地址：${document.location.href}`;
-    console.log(infoText);
+    let novelName, author, intro;
+    rule.novelName[Symbol.toStringTag] == 'AsyncFunction' ? rule.novelName().then(result => novelName = result) : novelName = rule.novelName();
+    rule.author[Symbol.toStringTag] == 'AsyncFunction' ? rule.author().then(result => author = result) : author = rule.author();
+    rule.intro[Symbol.toStringTag] == 'AsyncFunction' ? rule.intro().then(result => intro = result) : intro = rule.intro();
 
     const size = Symbol('size');
     let linkList = rule.linkList();
@@ -96,6 +123,7 @@ function run(rule) {
         .then(chapters => {
             console.log(chapters);
             console.log('保存中……');
+            const infoText = `题名：${novelName}\n作者：${author}\n简介：${intro}\n来源地址：${document.location.href}`;
             let outputTxt = infoText;
             let outputHtmlZip = new JSZip;
             for (let i in chapters) {
@@ -173,12 +201,10 @@ function walk(Node, preNode, brCount, txtOut, htmlOut) {
             p.innerText = nodetext;
             htmlOut.appendChild(p);
             brCount = 0;
-        } else {
-            brCount++;
         }
     } else if (nodeName === 'BR') {
         brCount++;
-        const nNotBr = (Node.nextSibling.nodeName !== 'BR');
+        const nNotBr = (Node.nextSibling && Node.nextSibling.nodeName !== 'BR');
         if (nNotBr) {
             if (brCount === 2) {
                 txtOut = txtOut + '\n';
@@ -199,7 +225,7 @@ function walk(Node, preNode, brCount, txtOut, htmlOut) {
         if (nodetext !== "") {
             txtOut = txtOut + nodetext;
 
-            let lastNode = htmlOut.childNodes[-1];
+            let lastNode = htmlOut.childNodes[htmlOut.childElementCount - 1];
             lastNode.innerText = lastNode.innerText + nodetext;
         }
     }
