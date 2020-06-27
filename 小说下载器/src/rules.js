@@ -4,7 +4,7 @@ const rules = new Map([
         author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者:/, '').trim() },
         intro() { return convertDomNode(document.querySelector('#intro > p'))[0] },
         linkList() { return document.querySelectorAll('div.box_con div#list dl dd a') },
-        coverUrl() { return document.querySelector('#fmimg > img').src; },
+        coverUrl() { return document.querySelector('#fmimg > img').src },
         chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
         content: function(doc) { return doc.querySelector('#content') },
     }],
@@ -46,27 +46,7 @@ const rules = new Map([
             iNode.innerHTML = iNode.innerHTML.replace(/推荐地址：http:\/\/www.shuquge.com\/txt\/\d+\/index\.html/, '');
             return convertDomNode(iNode)[0];
         },
-        linkList() {
-            let dl = document.querySelector('.listmain > dl:nth-child(1)');
-            let rDt = dl.querySelector('dt:nth-child(1)')
-            if (rDt.innerText.includes('最新章节')) {
-                let p = null;
-                let n = rDt;
-                while (true) {
-                    if (n.nodeName == 'DD') {
-                        p = n;
-                        n = n.nextSibling;
-                        p.classList.add('not_download')
-                    } else if (n.nodeName == 'DT' && !n.innerText.includes('最新章节')) {
-                        break;
-                    } else {
-                        p = n;
-                        n = n.nextSibling;
-                    }
-                }
-            }
-            return dl.querySelectorAll('dd:not(.not_download) > a')
-        },
+        linkList() { return includeLatestChapter('.listmain > dl:nth-child(1)') },
         coverUrl() { return document.querySelector('.info > .cover > img').src },
         chapterName: function(doc) { return doc.querySelector('.content > h1:nth-child(1)').innerText.trim() },
         content: function(doc) {
@@ -79,27 +59,7 @@ const rules = new Map([
         bookname() { return document.querySelector('#info > h1:nth-child(1)').innerText.trim() },
         author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者：/, '').trim() },
         intro() { return convertDomNode(document.querySelector('#intro'))[0] },
-        linkList() {
-            let dl = document.querySelector('#list > dl');
-            let rDt = dl.querySelector('dt:nth-child(1)')
-            if (rDt.innerText.includes('最新章节')) {
-                let p = null;
-                let n = rDt;
-                while (true) {
-                    if (n.nodeName == 'DD') {
-                        p = n;
-                        n = n.nextSibling;
-                        p.classList.add('not_download')
-                    } else if (n.nodeName == 'DT' && !n.innerText.includes('最新章节')) {
-                        break;
-                    } else {
-                        p = n;
-                        n = n.nextSibling;
-                    }
-                }
-            }
-            return dl.querySelectorAll('dd:not(.not_download) > a')
-        },
+        linkList() { return includeLatestChapter('#list > dl') },
         coverUrl() { return document.querySelector('#fmimg > img').src },
         chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
         content: function(doc) {
@@ -108,5 +68,69 @@ const rules = new Map([
             content.innerHTML = content.innerHTML.replace(ad, '').replace(/http:\/\/www.shuquge.com\/txt\/\d+\/\d+\.html/, '');
             return content
         },
-    }]
+    }],
+    ["www.fpzw.com", {
+        bookname() { return document.querySelector('#title > h1:nth-child(1)').innerText.trim() },
+        author() { return document.querySelector('.author > a:nth-child(1)').innerText.trim() },
+        intro: async() => {
+            const indexUrl = document.location.href.replace(/xiaoshuo\/\d+\//, '');
+            const charset = 'GBK';
+            return (crossPage(indexUrl, "convertDomNode(doc.querySelector('.wright .Text'))[0]", charset))
+        },
+        linkList() { return includeLatestChapter('.book') },
+        coverUrl: async() => {
+            const indexUrl = document.location.href.replace(/xiaoshuo\/\d+\//, '');
+            const charset = 'GBK';
+            return (crossPage(indexUrl, "doc.querySelector('div.bortable.wleft > img').src", charset))
+        },
+        chapterName: function(doc) { return doc.querySelector('h2').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('.Text');
+            content.querySelector('.Text > a:nth-child(1)').remove();
+            content.querySelector('.Text > font[color="#F00"]').remove();
+            content.querySelector('strong.top_book').remove();
+            return content
+        },
+        charset: 'GBK',
+    }],
 ]);
+
+
+function includeLatestChapter(selector) {
+    let dl = document.querySelector(selector);
+    let rDt = dl.querySelector('dt:nth-child(1)')
+    if (rDt.innerText.includes('最新章节')) {
+        let p = null;
+        let n = rDt;
+        while (true) {
+            if (n.nodeName == 'DD') {
+                p = n;
+                n = n.nextSibling;
+                p.classList.add('not_download')
+            } else if (n.nodeName == 'DT' && !n.innerText.includes('最新章节')) {
+                break;
+            } else {
+                p = n;
+                n = n.nextSibling;
+            }
+        }
+    }
+    return dl.querySelectorAll('dd:not(.not_download) > a')
+}
+
+async function crossPage(url, functionString, charset) {
+    let text;
+    if (charset === undefined) {
+        text = await fetch(url).then(response => response.text())
+    } else {
+        text = await fetch(url)
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                let decoder = new TextDecoder(charset);
+                let text = decoder.decode(buffer);
+                return text
+            })
+    }
+    const doc = (new DOMParser()).parseFromString(text, 'text/html');
+    return (eval(functionString))
+}

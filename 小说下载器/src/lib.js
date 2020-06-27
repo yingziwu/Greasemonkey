@@ -26,6 +26,10 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
         //pass
     } else if (nNodeName === 'BR') {
         brc++
+    } else if (nNodeName == 'HR') {
+        txtOut = txtOut + '\n' + '-'.repeat(15) + 'n';
+        let hr = document.createElement('hr');
+        htmlOut.appendChild(hr);
     } else if (nNodeName === '#text') {
         const nodetext = n.textContent.trim()
             .replace(/(\s+)?\n+(\s+)?/g, '').replace(/\s+/, ' ');

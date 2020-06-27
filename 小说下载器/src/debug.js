@@ -19,8 +19,7 @@ async function ruleTest(rule) {
     coverImg.style.cssText = `position: fixed; bottom: 8%; right: 8%; z-index: 99; max-width: 150px;`;
     document.body.appendChild(coverImg);
 
-    let pageTask = { 'id': 0, 'url': linkList[0].href, 'retry': 0, 'dom': linkList[0] };
-    let pageTaskQueue = [pageTask];
+    let pageTaskQueue = [{ 'id': 0, 'url': linkList[0].href, 'retry': 0, 'dom': linkList[0] }];
     let pageWorkerResolved = new Map();
     let pageWorkerRejected = new Map();
 
@@ -30,7 +29,7 @@ async function ruleTest(rule) {
         let finishNum = pageWorkerResolved.size + pageWorkerRejected.size;
         if (finishNum != 1) {
             if (pageTaskQueue) {
-                pageTaskQueue.pop()
+                const pageTask = pageTaskQueue.pop()
                 pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
             }
         } else {

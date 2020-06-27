@@ -20,6 +20,7 @@
 - [精彩小说网](https://www.jingcaiyuedu.com/)
 - [书趣阁](http://www.shuquge.com/)
 - [顶点小说](https://www.dingdiann.com/)
+- [2k小说阅读网](https://www.fpzw.com/)
 
 ## 添加更多网站
 
