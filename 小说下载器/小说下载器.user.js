@@ -10,19 +10,19 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.1.0
+// @version     1.1.1
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
-// @icon        -
+// @icon        https://greasyfork.org/assets/blacklogo96-1221dbbb8f0d47a728f968c35c2e2e03c64276a585b8dceb7a79a17a3f350e8a.png
 // @license     AGPL-3.0-or-later
 // ==/UserScript==
 
 "use strict";
 
-/*  本下载器可自定义下载规则以支持更多网站
+/*  本下载器可添加抓取规则以支持更多网站
 
-    自定义规则模板：
+    抓取规则示例：
     ["www.yruan.com", {
         bookname() { return document.querySelector('#info > h1:nth-child(1)').innerText.trim() },
         author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者:/, '').trim() },
@@ -33,29 +33,41 @@
         content: function(doc) { return doc.querySelector('#content') },
     }],
     
-    自定义规则为7个函数：
-    bookname()      抓取小说题名，返回值应为 string
-    author()        抓取小说作者，返回值应为 string
-    intro()         抓取小说简介，返回值应为 string
-    linkList()      抓取小说分章链接列表，返回值应为 NodeList
-    coverUrl()      抓取小说封面，返回值为应为 string
-    以上5个函数在小说目录页（即按下按钮时的页面）运行
-    chapterName(doc)    抓取小说章节名，返回值应为 string
-    content(doc)         抓取小说章节主体部分，返回值应为 DomNode
-    以上2个函数在小说章节页运行，输入值 doc 为小说章节页的 document
+    抓取规则的 `key` 为该抓取规则适用的网站域名，即 `document.location.host`。
+
+    抓取规则的 `value` 一对象，该对象由7个函数组成：
+
+    函数名          功能                返回值
+    bookname()	抓取小说题名            String
+    author()	抓取小说作者	        String
+    intro()	    抓取小说简介	        String
+    linkList()	抓取小说分章链接列表     NodeList
+    coverUrl()	抓取小说封面图片地址     String
+
+    以上5个函数在小说目录页（即按下按钮时的页面）运行。
+
+    函数名                  功能                返回值
+    chapterName(doc)    抓取小说章节名          String
+    content(doc)        抓取小说章节主体部分     Element
+
+    以上2个函数在小说章节页运行，输入值 `doc` 为小说章节页的 `document` 。
+
+    根据上述要求添加好相应网站抓取规则，并在 `// @match` 中添加相应网站，即可在新网站上使用本下载器。
 
     调试功能：
-    将 enableDebug 变量改为 true 可开启调试功能，开启之后可在 console 中使用如下功能：
-    rule                    变量    当前规则
+    将 `enableDebug` 变量改为 `true` 可开启调试功能，开启之后可在控制台（console）中访问如下对象：
+    
+    对象名	                 类型	  功能
+    rule                    变量    当前抓取规则
     main(rule)              函数    运行下载器
-    convertDomNode(Node)    函数    输出处理后的txt文本及Dom节点
-    ruleTest(rule)          函数    测试自定义规则
+    convertDomNode(node)    函数    输出处理后的txt文本及Dom节点
+    ruleTest(rule)          函数    测试抓取规则
 */
 
 const enableDebug = false;
 const maxRetryTimes = 3;
 const maxConcurrency = 10;
-let rules = new Map([
+const rules = new Map([
     ["www.yruan.com", {
         bookname() { return document.querySelector('#info > h1:nth-child(1)').innerText.trim() },
         author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者:/, '').trim() },
@@ -229,8 +241,8 @@ async function main(rule) {
         if (finishNum !== pageNum) {
             for (let i = nowWorking; i < maxConcurrency; i++) {
                 const pageTask = pageTaskQueue.pop();
-                nowWorking++;
                 if (pageTask) {
+                    nowWorking++;
                     console.log(`开始下载：${pageTask.id}\t${pageTask.dom.innerText}\t${pageTask.url}\t第${pageTask.retry}次重试`);
                     pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
                 }
@@ -383,15 +395,17 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
     } else if (nNodeName === 'BR') {
         brc++
     } else if (nNodeName === '#text') {
-        const nodetext = n.textContent.trim();
+        const nodetext = n.textContent.trim()
+            .replace(/(\s+)?\n+(\s+)?/g, '').replace(/\s+/, ' ');
         if (nodetext) {
             if (brc === 0) {
-                txtOut = txtOut + nodetext;
                 if (nodeType2.includes(pNodeName)) {
+                    txtOut = txtOut + '\n'.repeat(2) + nodetext;
                     let p0 = document.createElement('p');
                     p0.innerText = nodetext;
                     htmlOut.appendChild(p0);
                 } else {
+                    txtOut = txtOut + nodetext;
                     lastNode.innerText = lastNode.innerText + nodetext;
                 }
             } else if (brc === 1 || brc === 2) {
@@ -441,6 +455,7 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
     } else if (n.childElementCount === 0) {
         const nodetext = n.innerText.trim();
         if (nodetext) {
+            txtOut = txtOut + nodetext;
             lastNode.innerText = lastNode.innerText + nodetext;
         }
     } else if (n.childElementCount !== 0) {
