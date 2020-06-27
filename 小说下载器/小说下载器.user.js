@@ -10,11 +10,15 @@
 // @match       http://www.xkzw.org/xkzw*/
 // @match       https://www.fpzw.com/xiaoshuo/*/*/
 // @match       https://www.hetushu.com/book/*/index.html
+// @match       http://www.shouda8.com/*/
+// @match       https://www.shouda8.com/*/
 // @grant       unsafeWindow
+// @grant       GM_xmlhttpRequest
+// @connect     img.shouda8.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.1.5.6
+// @version     1.2.0.3
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -265,7 +269,23 @@ const rules = new Map([
             }
         },
     }],
-
+    ["www.shouda8.com", {
+        bookname() { return document.querySelector('.bread-crumbs > li:nth-child(4)').innerText.replace('最新章节列表', '').trim() },
+        author() { return document.querySelector('div.bookname > h1 > em').innerText.replace('作者：', '').trim() },
+        intro() {
+            let intro = document.querySelector('.intro');
+            intro.querySelector('.book_keywords').remove;
+            return convertDomNode(intro)[0]
+        },
+        linkList() { return document.querySelectorAll('.link_14 > dl dd a') },
+        coverUrl() { return document.querySelector('.pic > img:nth-child(1)').src },
+        chapterName: function(doc) { return doc.querySelector('.kfyd > h2:nth-child(1)').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('#content');
+            content.querySelector('p:last-child').remove()
+            return content
+        },
+    }]
 ]);
 
 
@@ -446,8 +466,25 @@ async function getMetadate(rule) {
         cover = {
             'type': response.headers.get('Content-Type').split('/')[1],
             'file': response.blob(),
-            'url': coverUrl
+            'url': response.url
         };
+    }).catch(async(error) => {
+        console.error(error);
+        console.log('try GM_xmlhttpRequest……');
+        await gfetch(coverUrl, { responseType: 'blob' }).then(response => {
+            const _headers = response.responseHeaders.split('\r\n');
+            let headers = {};
+            for (let _header of _headers) {
+                let k, v;
+                [k, v] = _header.split(/:\s+/);
+                headers[k] = v;
+            }
+            cover = {
+                'type': headers['content-type'].split('/')[1],
+                'file': response.response,
+                'url': response.finalUrl
+            };
+        })
     })
     intro = intro.replaceAll(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
@@ -528,6 +565,30 @@ async function extractData(id, url, text, rule, pageWorkerResolved) {
     });
 }
 
+
+function gfetch(url, { method, headers, data, cookie, binary, nocache, revalidate, timeout, context, responseType, overrideMimeType, anonymous, username, password } = {}) {
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            url: url,
+            method: method,
+            headers: headers,
+            data: data,
+            cookie: cookie,
+            binary: binary,
+            nocache: nocache,
+            revalidate: revalidate,
+            timeout: timeout,
+            context: context,
+            responseType: responseType,
+            overrideMimeType: overrideMimeType,
+            anonymous: anonymous,
+            username: username,
+            password: password,
+            onload: (obj) => { resolve(obj) },
+            onerror: (err) => { reject(err) }
+        })
+    })
+}
 
 function convertDomNode(node) {
     let txtOut = '';

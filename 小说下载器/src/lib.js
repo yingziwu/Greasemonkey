@@ -1,3 +1,27 @@
+function gfetch(url, { method, headers, data, cookie, binary, nocache, revalidate, timeout, context, responseType, overrideMimeType, anonymous, username, password } = {}) {
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            url: url,
+            method: method,
+            headers: headers,
+            data: data,
+            cookie: cookie,
+            binary: binary,
+            nocache: nocache,
+            revalidate: revalidate,
+            timeout: timeout,
+            context: context,
+            responseType: responseType,
+            overrideMimeType: overrideMimeType,
+            anonymous: anonymous,
+            username: username,
+            password: password,
+            onload: (obj) => { resolve(obj) },
+            onerror: (err) => { reject(err) }
+        })
+    })
+}
+
 function convertDomNode(node) {
     let txtOut = '';
     let htmlOut = document.createElement('div');

@@ -24,6 +24,7 @@
 - [和图书](https://www.hetushu.com/)
 - [笔趣窝](http://www.biquwo.org/)
 - [星空文学](http://www.xkzw.org/)
+- [手打吧](http://www.shouda8.com/)
 
 ## 添加更多网站
 

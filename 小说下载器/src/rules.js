@@ -188,7 +188,23 @@ const rules = new Map([
             }
         },
     }],
-
+    ["www.shouda8.com", {
+        bookname() { return document.querySelector('.bread-crumbs > li:nth-child(4)').innerText.replace('最新章节列表', '').trim() },
+        author() { return document.querySelector('div.bookname > h1 > em').innerText.replace('作者：', '').trim() },
+        intro() {
+            let intro = document.querySelector('.intro');
+            intro.querySelector('.book_keywords').remove;
+            return convertDomNode(intro)[0]
+        },
+        linkList() { return document.querySelectorAll('.link_14 > dl dd a') },
+        coverUrl() { return document.querySelector('.pic > img:nth-child(1)').src },
+        chapterName: function(doc) { return doc.querySelector('.kfyd > h2:nth-child(1)').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('#content');
+            content.querySelector('p:last-child').remove()
+            return content
+        },
+    }]
 ]);
 
 

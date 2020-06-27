@@ -10,11 +10,15 @@
 // @match       http://www.xkzw.org/xkzw*/
 // @match       https://www.fpzw.com/xiaoshuo/*/*/
 // @match       https://www.hetushu.com/book/*/index.html
+// @match       http://www.shouda8.com/*/
+// @match       https://www.shouda8.com/*/
 // @grant       unsafeWindow
+// @grant       GM_xmlhttpRequest
+// @connect     img.shouda8.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.1.5.6
+// @version     1.2.0.3
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues

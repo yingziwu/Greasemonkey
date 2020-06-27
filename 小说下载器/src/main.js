@@ -135,8 +135,25 @@ async function getMetadate(rule) {
         cover = {
             'type': response.headers.get('Content-Type').split('/')[1],
             'file': response.blob(),
-            'url': coverUrl
+            'url': response.url
         };
+    }).catch(async(error) => {
+        console.error(error);
+        console.log('try GM_xmlhttpRequest……');
+        await gfetch(coverUrl, { responseType: 'blob' }).then(response => {
+            const _headers = response.responseHeaders.split('\r\n');
+            let headers = {};
+            for (let _header of _headers) {
+                let k, v;
+                [k, v] = _header.split(/:\s+/);
+                headers[k] = v;
+            }
+            cover = {
+                'type': headers['content-type'].split('/')[1],
+                'file': response.response,
+                'url': response.finalUrl
+            };
+        })
     })
     intro = intro.replaceAll(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
