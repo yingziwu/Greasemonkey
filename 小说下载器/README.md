@@ -23,6 +23,7 @@
 - [2k小说阅读网](https://www.fpzw.com/)
 - [和图书](https://www.hetushu.com/)
 - [笔趣窝](http://www.biquwo.org/)
+- [星空文学](http://www.xkzw.org/)
 
 ## 添加更多网站
 
@@ -44,24 +45,31 @@
 
 抓取规则的 `key` 为该抓取规则适用的网站域名，即 `document.location.host`。
 
-抓取规则的 `value` 一对象，该对象由7个函数组成：
+抓取规则的 `value` 一对象，该对象由7个函数1个变量组成：
 
 |函数名|功能|返回值|
 |----|----|-----|
-|bookname() |抓取小说题名|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
-|author()  |抓取小说作者|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
-|intro()   |抓取小说简介|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
-|linkList()|抓取小说分章链接列表|[NodeList](https://developer.mozilla.org/en-US/docs/Web/API/NodeList) |
-|coverUrl()|抓取小说封面图片地址|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
+|`bookname()` |抓取小说题名|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
+|`author()`  |抓取小说作者|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
+|`intro()`   |抓取小说简介|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
+|`linkList()`|抓取小说分章链接列表|[NodeList](https://developer.mozilla.org/en-US/docs/Web/API/NodeList) |
+|`coverUrl()`|抓取小说封面图片地址|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
 
 以上5个函数在小说目录页（即按下按钮时的页面）运行。
 
 |函数名|功能|返回值|
 |----|----|-----|
-|chapterName(doc) |抓取小说章节名|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
-|content(doc)     |抓取小说章节主体部分|[Element](https://developer.mozilla.org/en-US/docs/Web/API/Element)|
+|`chapterName(doc)` |抓取小说章节名|[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)|
+|`content(doc)`     |抓取小说章节主体部分|[Element](https://developer.mozilla.org/en-US/docs/Web/API/Element)|
 
 以上2个函数在小说章节页运行，输入值 `doc` 为小说章节页的 `document` 。
+
+|变量名|功能|备注|
+|----|----|-----|
+|`charset`|网站响应的编码方式|可选|
+
+若网站返回的响应非 `UTF-8` 编码，请添加 `charset` 变量注明编码方式。网站当前编码方式可通过 `document.charset` 查看。
+
 
 根据上述要求添加好相应网站抓取规则，并在 `// @match` 中添加相应网站，即可在新网站上使用本下载器。
 

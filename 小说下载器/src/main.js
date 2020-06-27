@@ -198,10 +198,13 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     }
 }
 
-function extractData(id, url, text, rule, pageWorkerResolved) {
+async function extractData(id, url, text, rule, pageWorkerResolved) {
     let doc = (new DOMParser()).parseFromString(text, 'text/html');
-    const chapterName = rule.chapterName(doc);
-    const content = rule.content(doc);
+
+    let chapterName, content;
+    if (rule.chapterName[Symbol.toStringTag] == 'AsyncFunction') { await rule.chapterName(doc).then(result => chapterName = result) } else { chapterName = rule.chapterName(doc) }
+    if (rule.content[Symbol.toStringTag] == 'AsyncFunction') { await rule.content(doc).then(result => content = result) } else { content = rule.content(doc) }
+
     let txtOut, htmlOut;
     [txtOut, htmlOut] = convertDomNode(content);
     pageWorkerResolved.set(id, {

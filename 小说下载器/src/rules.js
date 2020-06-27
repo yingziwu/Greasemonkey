@@ -105,6 +105,90 @@ const rules = new Map([
         chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
         content: function(doc) { return doc.querySelector('#content') },
     }],
+    ["www.xkzw.org", {
+        bookname() { return document.querySelector('#info > h1').innerText.trim() },
+        author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者：/, '').trim() },
+        intro() { return convertDomNode(document.querySelector('#intro'))[0] },
+        linkList() {
+            let showmore = document.querySelector('#showMore a');
+            let showmoreJS = showmore.href.replace('javascript:', '');
+            if (!showmore.innerText.includes('点击关闭')) {
+                eval(showmoreJS);
+            }
+            return document.querySelectorAll('.list dd > a')
+        },
+        coverUrl() { return document.querySelector('#fmimg > img').src },
+        chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
+        content: async function(doc) {
+            const CryptoJS = await loadCryptoJs();
+            runEval(CryptoJS);
+            return doc.querySelector('#content')
+
+
+            async function loadCryptoJs() {
+                const url = 'https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js';
+                let response = await fetch(url);
+                let scriptText = await response.text();
+                eval(scriptText)
+                const CryptoJS = unsafeWindow.CryptoJS;
+                return CryptoJS
+            }
+
+            function runEval(CryptoJS) {
+                // 以下部分来自 http://www.xkzw.org/js/c.js 中的去除混淆后的解密代码
+                // 本人将原代码中 document 修改为 doc
+                function gettt1(str, keyStr, ivStr) { var key = CryptoJS.enc.Utf8.parse(keyStr); var iv = CryptoJS.enc.Utf8.parse(ivStr); var encryptedHexStr = CryptoJS.enc.Hex.parse(str); var srcs = CryptoJS.enc.Base64.stringify(encryptedHexStr); var decrypt = CryptoJS.DES.decrypt(srcs, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }); var decryptedStr = decrypt.toString(CryptoJS.enc.Utf8); return decryptedStr.toString() };
+
+                function gettt2(str, keyStr, ivStr) { var key = CryptoJS.enc.Utf8.parse(keyStr); var iv = CryptoJS.enc.Utf8.parse(ivStr); var encryptedHexStr = CryptoJS.enc.Hex.parse(str); var srcs = CryptoJS.enc.Base64.stringify(encryptedHexStr); var decrypt = CryptoJS.AES.decrypt(srcs, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }); var decryptedStr = decrypt.toString(CryptoJS.enc.Utf8); return decryptedStr.toString() };
+
+                function gettt3(str, keyStr, ivStr) { var key = CryptoJS.enc.Utf8.parse(keyStr); var iv = CryptoJS.enc.Utf8.parse(ivStr); var encryptedHexStr = CryptoJS.enc.Hex.parse(str); var srcs = CryptoJS.enc.Base64.stringify(encryptedHexStr); var decrypt = CryptoJS.RC4.decrypt(srcs, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }); var decryptedStr = decrypt.toString(CryptoJS.enc.Utf8); return decryptedStr.toString() };
+
+                function getttn(str, keyStr, ivStr) { var key = CryptoJS.enc.Utf8.parse(keyStr); var iv = CryptoJS.enc.Utf8.parse(ivStr); var encryptedHexStr = CryptoJS.enc.Hex.parse(str); var srcs = CryptoJS.enc.Base64.stringify(encryptedHexStr); var decrypt = CryptoJS.TripleDES.decrypt(srcs, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }); var decryptedStr = decrypt.toString(CryptoJS.enc.Utf8); return decryptedStr.toString() };
+
+                function showttt1(doc) {
+                    var obj = doc.getElementById("other");
+                    var objTips = doc.getElementById("contenttips");
+                    if (obj) {
+                        var content = obj.innerHTML.trim();
+                        var type = parseInt(content.substring(0, 1));
+                        var key;
+                        var iv;
+                        if (type == 1) {
+                            key = content.substring(1, 9);
+                            iv = content.substring(9, 17);
+                            content = content.substring(17);
+                            obj.innerHTML = gettt1(content, key, iv);
+                            obj.style.display = "block";
+                            if (objTips) { objTips.style.display = "none" }
+                        } else if (type == 2) {
+                            key = content.substring(1, 33);
+                            iv = content.substring(33, 49);
+                            content = content.substring(49);
+                            obj.innerHTML = gettt2(content, key, iv);
+                            obj.style.display = "block";
+                            if (objTips) { objTips.style.display = "none" }
+                        } else if (type == 3) {
+                            key = content.substring(1, 9);
+                            iv = content.substring(9, 17);
+                            content = content.substring(17);
+                            obj.innerHTML = gettt3(content, key, iv);
+                            obj.style.display = "block";
+                            if (objTips) { objTips.style.display = "none" }
+                        } else {
+                            key = content.substring(1, 25);
+                            iv = content.substring(25, 33);
+                            content = content.substring(33);
+                            obj.innerHTML = getttn(content, key, iv);
+                            obj.style.display = "block";
+                            if (objTips) { objTips.style.display = "none" }
+                        }
+                    }
+                };
+                showttt1(doc);
+            }
+        },
+    }],
+
 ]);
 
 
