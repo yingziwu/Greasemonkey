@@ -18,6 +18,7 @@
 // @license     AGPL-3.0-or-later
 // ==/UserScript==
 
+
 "use strict";
 
 /*  本下载器可添加抓取规则以支持更多网站
@@ -64,9 +65,12 @@
     ruleTest(rule)          函数    测试抓取规则
 */
 
+
 const enableDebug = false;
 const maxRetryTimes = 3;
 const maxConcurrency = 10;
+
+
 const rules = new Map([
     ["www.yruan.com", {
         bookname() { return document.querySelector('#info > h1:nth-child(1)').innerText.trim() },
@@ -179,6 +183,7 @@ const rules = new Map([
         },
     }]
 ]);
+
 
 const host = document.location.host;
 const rule = rules.get(host);
@@ -366,6 +371,7 @@ function extractData(id, url, text, rule, pageWorkerResolved) {
     });
 }
 
+
 function convertDomNode(node) {
     let txtOut = '';
     let htmlOut = document.createElement('div');
@@ -472,6 +478,7 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
         return [txtOut, htmlOut, brc]
     }
 }
+
 
 function debug() {
     unsafeWindow.rule = rule;
