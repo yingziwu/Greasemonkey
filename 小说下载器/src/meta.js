@@ -7,11 +7,12 @@
 // @match       http://www.dingdiann.com/ddk*/
 // @match       https://www.dingdiann.com/ddk*/
 // @match       https://www.fpzw.com/xiaoshuo/*/*/
+// @match       https://www.hetushu.com/book/*/index.html
 // @grant       unsafeWindow
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.1.2.11
+// @version     1.1.3.2
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues

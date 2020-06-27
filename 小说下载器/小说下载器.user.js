@@ -7,11 +7,12 @@
 // @match       http://www.dingdiann.com/ddk*/
 // @match       https://www.dingdiann.com/ddk*/
 // @match       https://www.fpzw.com/xiaoshuo/*/*/
+// @match       https://www.hetushu.com/book/*/index.html
 // @grant       unsafeWindow
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.1.2.11
+// @version     1.1.3.2
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -85,25 +86,15 @@ const rules = new Map([
     ["www.jingcaiyuedu.com", {
         bookname() { return document.querySelector('div.row.text-center.mb10 > h1:nth-child(1)').innerText.trim() },
         author() { return document.querySelector('div.row.text-center.mb10 a[href^="/novel/"]').innerText.trim() },
-        intro: (async function() {
+        intro: async() => {
             const indexUrl = document.location.href.replace(/\/list.html$/, '.html');
-            return await fetch(indexUrl)
-                .then(response => response.text())
-                .then(text => {
-                    const doc = (new DOMParser()).parseFromString(text, 'text/html');
-                    return convertDomNode(doc.querySelector('#bookIntro'))[0]
-                })
-        }),
+            return (crossPage(indexUrl, "convertDomNode(doc.querySelector('#bookIntro'))[0]"))
+        },
         linkList() { return document.querySelectorAll('dd.col-md-4 > a') },
-        coverUrl: (async function() {
+        coverUrl: async() => {
             const indexUrl = document.location.href.replace(/\/list.html$/, '.html');
-            return await fetch(indexUrl)
-                .then(response => response.text())
-                .then(text => {
-                    const doc = (new DOMParser()).parseFromString(text, 'text/html');
-                    return doc.querySelector('.panel-body img').getAttribute('data-original')
-                })
-        }),
+            return (crossPage(indexUrl, "doc.querySelector('.panel-body img').getAttribute('data-original')"))
+        },
         chapterName: function(doc) { return doc.querySelector('h1.readTitle').innerText.trim() },
         content: function(doc) {
             let c = doc.querySelector('#htmlContent');
@@ -167,6 +158,19 @@ const rules = new Map([
         },
         charset: 'GBK',
     }],
+    ["www.hetushu.com", {
+        bookname() { return document.querySelector('.book_info > h2').innerText.trim() },
+        author() { return document.querySelector('.book_info > div:nth-child(3) > a:nth-child(1)').innerText.trim() },
+        intro() { return convertDomNode(document.querySelector('.intro'))[0] },
+        linkList() { return document.querySelectorAll('#dir dd a') },
+        coverUrl() { return document.querySelector('.book_info > img').src },
+        chapterName: function(doc) { return doc.querySelector('#content .h2').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('#content');
+            content.querySelectorAll('h2').forEach(n => n.remove())
+            return content
+        },
+    }]
 ]);
 
 
@@ -297,7 +301,7 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
     let savedZip = new JSZip();
     for (let key of sortKeys) {
         let v = pageWorkerResolved.get(key);
-        savedTxt = savedTxt + '\n\n\n\n' + `## ${v.chapterName}` + '\n' + '='.repeat(15) + '\n\n' + v.txt.trim();
+        savedTxt = savedTxt + '\n\n\n\n' + `## ${v.chapterName}` + '\n' + '='.repeat(30) + '\n\n' + v.txt.trim();
         const htmlFileName = 'Chapter' + '0'.repeat(pageNum.toString().length - key.toString().length) + key.toString() + '.html';
         const htmlFile = genHtml(v.chapterName, v.dom);
         savedZip.file(htmlFileName, htmlFile);
@@ -345,6 +349,7 @@ async function getMetadate(rule) {
             'url': coverUrl
         };
     })
+    intro = intro.replaceAll(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
     infoText = `题名：${bookname}\n作者：${author}\n简介：${intro}\n来源：${document.location.href}`;
     return [bookname, author, intro, linkList, cover, sourceUrl, infoText]
@@ -573,8 +578,8 @@ async function ruleTest(rule) {
     function loop() {
         let finishNum = pageWorkerResolved.size + pageWorkerRejected.size;
         if (finishNum != 1) {
-            if (pageTaskQueue) {
-                const pageTask = pageTaskQueue.pop()
+            const pageTask = pageTaskQueue.pop()
+            if (pageTask) {
                 pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
             }
         } else {

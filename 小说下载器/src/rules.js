@@ -11,25 +11,15 @@ const rules = new Map([
     ["www.jingcaiyuedu.com", {
         bookname() { return document.querySelector('div.row.text-center.mb10 > h1:nth-child(1)').innerText.trim() },
         author() { return document.querySelector('div.row.text-center.mb10 a[href^="/novel/"]').innerText.trim() },
-        intro: (async function() {
+        intro: async() => {
             const indexUrl = document.location.href.replace(/\/list.html$/, '.html');
-            return await fetch(indexUrl)
-                .then(response => response.text())
-                .then(text => {
-                    const doc = (new DOMParser()).parseFromString(text, 'text/html');
-                    return convertDomNode(doc.querySelector('#bookIntro'))[0]
-                })
-        }),
+            return (crossPage(indexUrl, "convertDomNode(doc.querySelector('#bookIntro'))[0]"))
+        },
         linkList() { return document.querySelectorAll('dd.col-md-4 > a') },
-        coverUrl: (async function() {
+        coverUrl: async() => {
             const indexUrl = document.location.href.replace(/\/list.html$/, '.html');
-            return await fetch(indexUrl)
-                .then(response => response.text())
-                .then(text => {
-                    const doc = (new DOMParser()).parseFromString(text, 'text/html');
-                    return doc.querySelector('.panel-body img').getAttribute('data-original')
-                })
-        }),
+            return (crossPage(indexUrl, "doc.querySelector('.panel-body img').getAttribute('data-original')"))
+        },
         chapterName: function(doc) { return doc.querySelector('h1.readTitle').innerText.trim() },
         content: function(doc) {
             let c = doc.querySelector('#htmlContent');
@@ -93,6 +83,19 @@ const rules = new Map([
         },
         charset: 'GBK',
     }],
+    ["www.hetushu.com", {
+        bookname() { return document.querySelector('.book_info > h2').innerText.trim() },
+        author() { return document.querySelector('.book_info > div:nth-child(3) > a:nth-child(1)').innerText.trim() },
+        intro() { return convertDomNode(document.querySelector('.intro'))[0] },
+        linkList() { return document.querySelectorAll('#dir dd a') },
+        coverUrl() { return document.querySelector('.book_info > img').src },
+        chapterName: function(doc) { return doc.querySelector('#content .h2').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('#content');
+            content.querySelectorAll('h2').forEach(n => n.remove())
+            return content
+        },
+    }]
 ]);
 
 

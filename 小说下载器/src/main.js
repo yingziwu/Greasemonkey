@@ -85,7 +85,7 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
     let savedZip = new JSZip();
     for (let key of sortKeys) {
         let v = pageWorkerResolved.get(key);
-        savedTxt = savedTxt + '\n\n\n\n' + `## ${v.chapterName}` + '\n' + '='.repeat(15) + '\n\n' + v.txt.trim();
+        savedTxt = savedTxt + '\n\n\n\n' + `## ${v.chapterName}` + '\n' + '='.repeat(30) + '\n\n' + v.txt.trim();
         const htmlFileName = 'Chapter' + '0'.repeat(pageNum.toString().length - key.toString().length) + key.toString() + '.html';
         const htmlFile = genHtml(v.chapterName, v.dom);
         savedZip.file(htmlFileName, htmlFile);
@@ -133,6 +133,7 @@ async function getMetadate(rule) {
             'url': coverUrl
         };
     })
+    intro = intro.replaceAll(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
     infoText = `题名：${bookname}\n作者：${author}\n简介：${intro}\n来源：${document.location.href}`;
     return [bookname, author, intro, linkList, cover, sourceUrl, infoText]

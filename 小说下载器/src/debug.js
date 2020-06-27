@@ -28,8 +28,8 @@ async function ruleTest(rule) {
     function loop() {
         let finishNum = pageWorkerResolved.size + pageWorkerRejected.size;
         if (finishNum != 1) {
-            if (pageTaskQueue) {
-                const pageTask = pageTaskQueue.pop()
+            const pageTask = pageTaskQueue.pop()
+            if (pageTask) {
                 pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
             }
         } else {
