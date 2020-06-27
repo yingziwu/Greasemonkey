@@ -95,7 +95,16 @@ const rules = new Map([
             content.querySelectorAll('h2').forEach(n => n.remove())
             return content
         },
-    }]
+    }],
+    ["www.biquwo.org", {
+        bookname() { return document.querySelector('#info > h1').innerText.trim() },
+        author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者：/, '').trim() },
+        intro() { return convertDomNode(document.querySelector('#intro'))[0] },
+        linkList() { return includeLatestChapter('#list > dl:nth-child(1)') },
+        coverUrl() { return document.querySelector('#fmimg > img').src },
+        chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
+        content: function(doc) { return doc.querySelector('#content') },
+    }],
 ]);
 
 

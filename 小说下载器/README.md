@@ -22,6 +22,7 @@
 - [顶点小说](https://www.dingdiann.com/)
 - [2k小说阅读网](https://www.fpzw.com/)
 - [和图书](https://www.hetushu.com/)
+- [笔趣窝](http://www.biquwo.org/)
 
 ## 添加更多网站
 

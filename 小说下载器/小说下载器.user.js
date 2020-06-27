@@ -6,13 +6,14 @@
 // @match       http://www.shuquge.com/txt/*/index.html
 // @match       http://www.dingdiann.com/ddk*/
 // @match       https://www.dingdiann.com/ddk*/
+// @match       http://www.biquwo.org/bqw*/
 // @match       https://www.fpzw.com/xiaoshuo/*/*/
 // @match       https://www.hetushu.com/book/*/index.html
 // @grant       unsafeWindow
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.1.3.2
+// @version     1.1.4.4
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -170,7 +171,16 @@ const rules = new Map([
             content.querySelectorAll('h2').forEach(n => n.remove())
             return content
         },
-    }]
+    }],
+    ["www.biquwo.org", {
+        bookname() { return document.querySelector('#info > h1').innerText.trim() },
+        author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者：/, '').trim() },
+        intro() { return convertDomNode(document.querySelector('#intro'))[0] },
+        linkList() { return includeLatestChapter('#list > dl:nth-child(1)') },
+        coverUrl() { return document.querySelector('#fmimg > img').src },
+        chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
+        content: function(doc) { return doc.querySelector('#content') },
+    }],
 ]);
 
 
@@ -269,7 +279,7 @@ async function main(rule) {
     let pageWorkerResolved = new Map();
     let pageWorkerRejected = new Map();
 
-    let loopId = setInterval(loop, 800);
+    let loopId = setInterval(loop, 300);
 
     function loop() {
         let finishNum = pageWorkerResolved.size + pageWorkerRejected.size;
@@ -311,8 +321,13 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
     saveAs((new Blob([savedTxt], { type: "text/plain;charset=utf-8" })), saveBaseFileName + '.txt');
     savedZip.file('info.txt', (new Blob([infoText], { type: "text/plain;charset=utf-8" })));
     savedZip.file(`cover.${cover.type}`, cover.file);
-    savedZip.generateAsync({ type: "blob" })
-        .then((blob) => { saveAs(blob, saveBaseFileName + '.zip'); })
+    savedZip.generateAsync({
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: {
+                level: 6
+            }
+        }).then((blob) => { saveAs(blob, saveBaseFileName + '.zip'); })
         .catch(err => console.log('saveZip: ' + err));
 
     downloading = false;
@@ -375,28 +390,16 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
         text = fetch(url).then(
             response => response.text(),
             error => {
-                console.error(id, url, pageTask, error);
                 nowWorking--;
-                retry++;
-                if (retry > maxRetryTimes) {
-                    pageWorkerRejected.set(id, url);
-                } else {
-                    pageTaskQueue.push({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
-                }
+                errorCallback(error)
             }
         )
     } else {
         text = fetch(url).then(
             response => response.arrayBuffer(),
             error => {
-                console.error(id, url, pageTask, error);
                 nowWorking--;
-                retry++;
-                if (retry > maxRetryTimes) {
-                    pageWorkerRejected.set(id, url);
-                } else {
-                    pageTaskQueue.push({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
-                }
+                errorCallback(error)
             }).then(
             buffer => {
                 let decoder = new TextDecoder(charset);
@@ -408,7 +411,9 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     text.then(text => {
         nowWorking--;
         extractData(id, url, text, rule, pageWorkerResolved)
-    }).catch(error => {
+    }).catch(error => errorCallback(error))
+
+    function errorCallback(error) {
         console.error(id, url, pageTask, error);
         retry++;
         if (retry > maxRetryTimes) {
@@ -416,7 +421,7 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
         } else {
             pageTaskQueue.push({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
         }
-    })
+    }
 }
 
 function extractData(id, url, text, rule, pageWorkerResolved) {

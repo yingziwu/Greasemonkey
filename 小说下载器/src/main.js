@@ -53,7 +53,7 @@ async function main(rule) {
     let pageWorkerResolved = new Map();
     let pageWorkerRejected = new Map();
 
-    let loopId = setInterval(loop, 800);
+    let loopId = setInterval(loop, 300);
 
     function loop() {
         let finishNum = pageWorkerResolved.size + pageWorkerRejected.size;
@@ -95,8 +95,13 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
     saveAs((new Blob([savedTxt], { type: "text/plain;charset=utf-8" })), saveBaseFileName + '.txt');
     savedZip.file('info.txt', (new Blob([infoText], { type: "text/plain;charset=utf-8" })));
     savedZip.file(`cover.${cover.type}`, cover.file);
-    savedZip.generateAsync({ type: "blob" })
-        .then((blob) => { saveAs(blob, saveBaseFileName + '.zip'); })
+    savedZip.generateAsync({
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: {
+                level: 6
+            }
+        }).then((blob) => { saveAs(blob, saveBaseFileName + '.zip'); })
         .catch(err => console.log('saveZip: ' + err));
 
     downloading = false;
@@ -159,28 +164,16 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
         text = fetch(url).then(
             response => response.text(),
             error => {
-                console.error(id, url, pageTask, error);
                 nowWorking--;
-                retry++;
-                if (retry > maxRetryTimes) {
-                    pageWorkerRejected.set(id, url);
-                } else {
-                    pageTaskQueue.push({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
-                }
+                errorCallback(error)
             }
         )
     } else {
         text = fetch(url).then(
             response => response.arrayBuffer(),
             error => {
-                console.error(id, url, pageTask, error);
                 nowWorking--;
-                retry++;
-                if (retry > maxRetryTimes) {
-                    pageWorkerRejected.set(id, url);
-                } else {
-                    pageTaskQueue.push({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
-                }
+                errorCallback(error)
             }).then(
             buffer => {
                 let decoder = new TextDecoder(charset);
@@ -192,7 +185,9 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     text.then(text => {
         nowWorking--;
         extractData(id, url, text, rule, pageWorkerResolved)
-    }).catch(error => {
+    }).catch(error => errorCallback(error))
+
+    function errorCallback(error) {
         console.error(id, url, pageTask, error);
         retry++;
         if (retry > maxRetryTimes) {
@@ -200,7 +195,7 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
         } else {
             pageTaskQueue.push({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
         }
-    })
+    }
 }
 
 function extractData(id, url, text, rule, pageWorkerResolved) {
