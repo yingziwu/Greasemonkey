@@ -195,7 +195,9 @@ const rules = new Map([
         author() { return document.querySelector('div.bookname > h1 > em').innerText.replace('作者：', '').trim() },
         intro() {
             let intro = document.querySelector('.intro');
-            intro.querySelector('.book_keywords').remove;
+            intro.querySelector('.book_keywords').remove();
+            intro.querySelectorAll('script').forEach(e => e.remove());
+            intro.querySelector('#cambrian0').remove();
             return convertDomNode(intro)[0]
         },
         linkList() { return document.querySelectorAll('.link_14 > dl dd a') },

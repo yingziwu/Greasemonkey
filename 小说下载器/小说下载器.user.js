@@ -20,7 +20,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.2.1.5
+// @version     1.2.2.1
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -314,7 +314,9 @@ const rules = new Map([
         author() { return document.querySelector('div.bookname > h1 > em').innerText.replace('作者：', '').trim() },
         intro() {
             let intro = document.querySelector('.intro');
-            intro.querySelector('.book_keywords').remove;
+            intro.querySelector('.book_keywords').remove();
+            intro.querySelectorAll('script').forEach(e => e.remove());
+            intro.querySelector('#cambrian0').remove();
             return convertDomNode(intro)[0]
         },
         linkList() { return document.querySelectorAll('.link_14 > dl dd a') },
@@ -832,12 +834,14 @@ function debug() {
     unsafeWindow.gfetch = gfetch;
 }
 
-async function ruleTest(rule) {
+async function ruleTest(rule, callback) {
+    let outpubObj;
     let bookname, author, intro, linkList, cover, sourceUrl, infoText;
     [bookname, author, intro, linkList, cover, sourceUrl, infoText] = await getMetadate(rule);
     console.log(`infoText:\n${infoText}`);
     console.log('cover: ', cover);
     console.log('linkList: ', linkList);
+    outpubObj = { 'infoText': infoText, 'cover': cover, 'linkList': linkList };
 
     let blob = await cover.file;
     let coverImg = document.createElement('img');
@@ -845,6 +849,7 @@ async function ruleTest(rule) {
     coverImg.onclick = function() { this.remove() };
     coverImg.style.cssText = `position: fixed; bottom: 8%; right: 8%; z-index: 99; max-width: 150px;`;
     document.body.appendChild(coverImg);
+    outpubObj['coverImg'] = coverImg;
 
     let pageTaskQueue = [{ 'id': 0, 'url': linkList[0].href, 'retry': 0, 'dom': linkList[0] }];
     let pageWorkerResolved = new Map();
@@ -862,7 +867,11 @@ async function ruleTest(rule) {
         } else {
             clearInterval(loopId);
             let result = pageWorkerResolved.get(0);
+            outpubObj['pageObj'] = result;
+            if (callback) { callback(outpubObj) }
             console.log(result);
+            console.log(result.dom);
+            console.log(result.txt);
         }
     }
 }
