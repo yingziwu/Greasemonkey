@@ -20,7 +20,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.2.2.1
+// @version     1.2.2.2
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -143,7 +143,7 @@ const rules = new Map([
         content: function(doc) {
             let c = doc.querySelector('#htmlContent');
             let ad = c.querySelector('p:nth-child(1)');
-            if (ad.innerText.includes('精彩小说网')) { ad.remove() }
+            if (ad && ad.innerText.includes('精彩小说网')) { ad.remove() }
             return c
         },
     }],
@@ -195,9 +195,9 @@ const rules = new Map([
         chapterName: function(doc) { return doc.querySelector('h2').innerText.trim() },
         content: function(doc) {
             let content = doc.querySelector('.Text');
-            content.querySelector('.Text > a:nth-child(1)').remove();
-            content.querySelector('.Text > font[color="#F00"]').remove();
-            content.querySelector('strong.top_book').remove();
+            rm('.Text > a:nth-child(1)', false, content);
+            rm('.Text > font[color="#F00"]', false, content);
+            rm('strong.top_book', false, content);
             return content
         },
         charset: 'GBK',
@@ -211,7 +211,7 @@ const rules = new Map([
         chapterName: function(doc) { return doc.querySelector('#content .h2').innerText.trim() },
         content: function(doc) {
             let content = doc.querySelector('#content');
-            content.querySelectorAll('h2').forEach(n => n.remove())
+            rm('h2', true, content);
             return content
         },
     }],
@@ -314,9 +314,9 @@ const rules = new Map([
         author() { return document.querySelector('div.bookname > h1 > em').innerText.replace('作者：', '').trim() },
         intro() {
             let intro = document.querySelector('.intro');
-            intro.querySelector('.book_keywords').remove();
-            intro.querySelectorAll('script').forEach(e => e.remove());
-            intro.querySelector('#cambrian0').remove();
+            rm('.book_keywords');
+            rm('script', true);
+            rm('#cambrian0');
             return convertDomNode(intro)[0]
         },
         linkList() { return document.querySelectorAll('.link_14 > dl dd a') },
@@ -324,7 +324,7 @@ const rules = new Map([
         chapterName: function(doc) { return doc.querySelector('.kfyd > h2:nth-child(1)').innerText.trim() },
         content: function(doc) {
             let content = doc.querySelector('#content');
-            content.querySelector('p:last-child').remove()
+            rm('p:last-child', false, content);
             return content
         },
     }],
@@ -360,6 +360,16 @@ const rules = new Map([
     }],
 ]);
 
+function rm(selector, All, doc) {
+    if (!doc) { doc = document }
+    if (All) {
+        let rs = doc.querySelectorAll(selector);
+        rs.forEach(e => e.remove());
+    } else {
+        let r = doc.querySelector(selector);
+        if (r) { r.remove() }
+    }
+}
 
 function includeLatestChapter(selector) {
     let dl = document.querySelector(selector);
