@@ -18,7 +18,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.2.0.5
+// @version     1.2.0.6
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -488,7 +488,7 @@ async function getMetadate(rule) {
             };
         })
     })
-    intro = intro.replaceAll(/\n{2,}/g, '\n');
+    intro = intro.replace(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
     infoText = `题名：${bookname}\n作者：${author}\n简介：${intro}\n来源：${document.location.href}`;
     return [bookname, author, intro, linkList, cover, sourceUrl, infoText]

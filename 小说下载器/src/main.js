@@ -155,7 +155,7 @@ async function getMetadate(rule) {
             };
         })
     })
-    intro = intro.replaceAll(/\n{2,}/g, '\n');
+    intro = intro.replace(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
     infoText = `题名：${bookname}\n作者：${author}\n简介：${intro}\n来源：${document.location.href}`;
     return [bookname, author, intro, linkList, cover, sourceUrl, infoText]
