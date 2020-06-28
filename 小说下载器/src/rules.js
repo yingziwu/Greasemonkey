@@ -206,7 +206,37 @@ const rules = new Map([
             content.querySelector('p:last-child').remove()
             return content
         },
-    }]
+    }],
+    ["book.qidian.com", {
+        bookname() { return document.querySelector('.book-info > h1 > em').innerText.trim() },
+        author() { return document.querySelector('.book-info .writer').innerText.replace(/作\s+者:/, '').trim() },
+        intro() { return convertDomNode(document.querySelector('.book-info-detail .book-intro'))[0] },
+        linkList: async() => {
+            return new Promise((resolve, reject) => {
+                let list;
+                const getLiLength = () => document.querySelectorAll('#j-catalogWrap li').length;
+                const getlinkList = () => document.querySelectorAll('.volume-wrap ul.cf li a:not([href^="//vipreader"]');
+                if (getLiLength() !== 0) {
+                    list = getlinkList();
+                    setTimeout(() => {
+                        if (getLiLength() !== 0) {
+                            list = getlinkList();
+                            resolve(list);
+                        } else {
+                            reject(new Error("Can't found linkList."));
+                        }
+                    }, 3000)
+                } else {
+                    list = getlinkList();
+                    resolve(list);
+                }
+            })
+        },
+        coverUrl() { return document.querySelector('#bookImg > img').src },
+        chapterName: function(doc) { return doc.querySelector('.j_chapterName > .content-wrap').innerText.trim() },
+        content: function(doc) { return doc.querySelector('.read-content') },
+        CORS: true,
+    }],
 ]);
 
 

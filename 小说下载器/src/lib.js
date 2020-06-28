@@ -1,3 +1,41 @@
+async function imgWorker(imgTask) {
+    const url = imgTask.url;
+    const filename = imgTask.filename;
+
+    let imgObject;
+    await fetch(url)
+        .then(response => {
+                imgObject = {
+                    'type': response.headers.get('Content-Type').split('/')[1],
+                    'file': response.blob(),
+                    'url': response.url
+                };
+            },
+            async error => {
+                console.error(error);
+                console.log(`try GM_xmlhttpRequest:\t${url}`);
+                await gfetch(url, { responseType: 'blob' })
+                    .then(response => {
+                        const _headers = response.responseHeaders.split('\r\n');
+                        let headers = {};
+                        for (let _header of _headers) {
+                            let k, v;
+                            [k, v] = _header.split(/:\s+/);
+                            headers[k] = v;
+                        }
+                        imgObject = {
+                            'type': headers['content-type'].split('/')[1],
+                            'file': response.response,
+                            'url': response.finalUrl
+                        };
+                    })
+            })
+
+    const output = { 'filename': filename, 'imgObject': imgObject }
+    return output
+}
+
+
 function gfetch(url, { method, headers, data, cookie, binary, nocache, revalidate, timeout, context, responseType, overrideMimeType, anonymous, username, password } = {}) {
     return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({

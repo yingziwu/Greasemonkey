@@ -16,15 +16,8 @@
 
 ## 目前支持小说网站
 
-- [亿软小说](http://www.yruan.com/)
-- [精彩小说网](https://www.jingcaiyuedu.com/)
-- [书趣阁](http://www.shuquge.com/)
-- [顶点小说](https://www.dingdiann.com/)
-- [2k小说阅读网](https://www.fpzw.com/)
-- [和图书](https://www.hetushu.com/)
-- [笔趣窝](http://www.biquwo.org/)
-- [星空文学](http://www.xkzw.org/)
-- [手打吧](http://www.shouda8.com/)
+- [起点—免费章节](https://www.qidian.com/)
+- [亿软小说](http://www.yruan.com/)、[精彩小说网](https://www.jingcaiyuedu.com/)、[书趣阁](http://www.shuquge.com/)、[顶点小说](https://www.dingdiann.com/)、[2k小说阅读网](https://www.fpzw.com/)、[和图书](https://www.hetushu.com/)、[笔趣窝](http://www.biquwo.org/)、[星空文学](http://www.xkzw.org/)、[手打吧](http://www.shouda8.com/)
 
 ## 添加更多网站
 
@@ -68,9 +61,11 @@
 |变量名|功能|备注|
 |----|----|-----|
 |`charset`|网站响应的编码方式|可选|
+|`CORS`|抓取章节时是否跨域|可选|
 
 若网站返回的响应非 `UTF-8` 编码，请添加 `charset` 变量注明编码方式。网站当前编码方式可通过 `document.charset` 查看。
 
+对于起点这样抓取章节页需要跨域的网站，请将 `CORS` 设为 `true` 。
 
 根据上述要求添加好相应网站抓取规则，并在 `// @match` 中添加相应网站，即可在新网站上使用本下载器。
 
