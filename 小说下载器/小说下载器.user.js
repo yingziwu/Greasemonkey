@@ -18,7 +18,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.2.0.3
+// @version     1.2.0.5
 // @author      bgme
 // @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -207,10 +207,12 @@ const rules = new Map([
 
 
             async function loadCryptoJs() {
-                const url = 'https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js';
-                let response = await fetch(url);
-                let scriptText = await response.text();
-                eval(scriptText)
+                if (!unsafeWindow.CryptoJS) {
+                    const url = 'https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js';
+                    let response = await fetch(url);
+                    let scriptText = await response.text();
+                    eval(scriptText)
+                }
                 const CryptoJS = unsafeWindow.CryptoJS;
                 return CryptoJS
             }
@@ -707,6 +709,7 @@ function debug() {
     unsafeWindow.main = main;
     unsafeWindow.convertDomNode = convertDomNode;
     unsafeWindow.ruleTest = ruleTest;
+    unsafeWindow.gfetch = gfetch;
 }
 
 async function ruleTest(rule) {

@@ -3,6 +3,7 @@ function debug() {
     unsafeWindow.main = main;
     unsafeWindow.convertDomNode = convertDomNode;
     unsafeWindow.ruleTest = ruleTest;
+    unsafeWindow.gfetch = gfetch;
 }
 
 async function ruleTest(rule) {

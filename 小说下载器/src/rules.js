@@ -126,10 +126,12 @@ const rules = new Map([
 
 
             async function loadCryptoJs() {
-                const url = 'https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js';
-                let response = await fetch(url);
-                let scriptText = await response.text();
-                eval(scriptText)
+                if (!unsafeWindow.CryptoJS) {
+                    const url = 'https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js';
+                    let response = await fetch(url);
+                    let scriptText = await response.text();
+                    eval(scriptText)
+                }
                 const CryptoJS = unsafeWindow.CryptoJS;
                 return CryptoJS
             }

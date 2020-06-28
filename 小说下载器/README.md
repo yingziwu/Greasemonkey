@@ -80,10 +80,11 @@
 
 |对象名|类型|功能|
 |-----|---|----|
-|rule                    |变量    |当前网站抓取规则|
-|main(rule)              |函数    |运行下载器|
-|convertDomNode(node)    |函数    |输出处理后的txt文本及Dom节点|
-|ruleTest(rule)          |函数    |测试抓取规则|
+|`rule`                    |变量    |当前网站抓取规则|
+|`main(rule)`              |函数    |运行下载器|
+|`convertDomNode(node)`    |函数    |输出处理后的txt文本及Dom节点|
+|`ruleTest(rule)`          |函数    |测试抓取规则|
+|`gfetch(url,option)`      |函数    |使用 `GM_xmlhttpRequest` 进行请求|
 
 
 ## License
