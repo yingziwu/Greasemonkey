@@ -32,6 +32,11 @@
 
     以上2个函数在小说章节页运行，输入值 `doc` 为小说章节页的 `document` 。
 
+    变量名	 功能	           备注
+    charset	网站响应的编码方式	可选
+
+    若网站返回的响应非 UTF-8 编码，请添加 charset 变量注明编码方式。网站当前编码方式可通过 document.charset 查看。
+
     根据上述要求添加好相应网站抓取规则，并在 `// @match` 中添加相应网站，即可在新网站上使用本下载器。
 
     调试功能：
@@ -42,4 +47,33 @@
     main(rule)              函数    运行下载器
     convertDomNode(node)    函数    输出处理后的txt文本及Dom节点
     ruleTest(rule)          函数    测试抓取规则
+    gfetch(url,option)      函数	使用 GM_xmlhttpRequest 进行请求
+
+    gfetch 可用 option 选项：
+    method              one of GET, HEAD, POST
+    url                 the destination URL
+    headers             ie. user-agent, referer, ... (some special headers are not supported by Safari and Android browsers)
+    data                some string to send via a POST request
+    cookie              a cookie to be patched into the sent cookie set
+    binary              send the data string in binary mode
+    nocache             don't cache the resource
+    revalidate          revalidate maybe cached content
+    timeout             a timeout in ms
+    context             a property which will be added to the response object
+    responseType        one of arraybuffer, blob, json
+    overrideMimeType    a MIME type for the request
+    anonymous           don't send cookies with the requests (please see the fetch notes)
+    username            a username for authentication
+    password            a password
+
+    gfetch 返回值：
+    finalUrl            the final URL after all redirects from where the data was loaded
+    readyState          the ready state
+    status              the request status
+    statusText          the request status text
+    responseHeaders     the request response headers
+    response            the response data as object if details.responseType was set
+    responseXML         the response data as XML document
+    responseText        the response data as plain string
+
 */
