@@ -23,7 +23,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.1.8
+// @version     1.3.2.2
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器，目前支持起点、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues

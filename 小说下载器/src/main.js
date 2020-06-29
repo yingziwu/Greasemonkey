@@ -81,6 +81,7 @@ async function main(rule) {
         let finishNum = pageWorkerResolved.size + pageWorkerRejected.size;
         let finishImgNum = imgWorkerResolved.size + imgWorkerRejected.size;
         if (finishNum !== pageNum || finishImgNum !== imgTaskQueueSet.size) {
+            updateProgress(finishNum, pageNum, finishImgNum, imgTaskQueueSet.size);
             for (let i = nowWorking; i < maxConcurrency; i++) {
                 const pageTask = pageTaskQueue.pop();
                 if (pageTask) {
@@ -140,11 +141,76 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
     downloading = false;
     document.querySelector('#novel-downloader > img').src = icon0;
     console.log('下载完毕！')
+    document.querySelector('#progress').remove();
 
     function compareNumeric(a, b) {
         if (a > b) return 1;
         if (a == b) return 0;
         if (a < b) return -1;
+    }
+}
+
+function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
+    if (!document.querySelector('#progress')) {
+        let progress = document.createElement('div');
+        progress.id = 'progress';
+        progress.innerHTML = `
+        <div id='page-progress' title="页面"></div>
+        <div id='img-progress' title="图片"></div>
+        `
+        let progressStyle = document.createElement('style');
+        progressStyle.innerHTML = `
+        #progress {
+            position: fixed;
+            bottom: 8%;
+            right: 3%;
+            z-index: 99;
+            border-style: none;
+            text-align: center;
+            vertical-align: baseline;
+            background-color: rgba(210, 210, 210, 0.2);
+            padding: 6px;
+            border-radius: 12px;
+        }
+        #page-progress{
+            --color:green;
+            --position:0%;
+            width:200px;
+            height:10px;
+            border-radius:30px;
+            background-color:#ccc;
+            background-image:radial-gradient(closest-side circle at var(--position),var(--color),var(--color) 100%,transparent),linear-gradient(var(--color),var(--color));
+            background-image:-webkit-radial-gradient(var(--position),circle closest-side,var(--color),var(--color) 100%,transparent),-webkit-linear-gradient(var(--color),var(--color));
+            background-size:100% ,var(--position);
+            background-repeat: no-repeat;
+            margin-bottom: 5px;
+        }
+        #img-progress{
+            --color:purple;
+            --position:0%;
+            width:200px;
+            height:10px;
+            border-radius:30px;
+            background-color:#ccc;
+            background-image:radial-gradient(closest-side circle at var(--position),var(--color),var(--color) 100%,transparent),linear-gradient(var(--color),var(--color));
+            background-image:-webkit-radial-gradient(var(--position),circle closest-side,var(--color),var(--color) 100%,transparent),-webkit-linear-gradient(var(--color),var(--color));
+            background-size:100% ,var(--position);
+            background-repeat: no-repeat;
+        }
+        `
+        document.head.appendChild(progressStyle);
+        document.body.appendChild(progress);
+    }
+
+    let pagePercent = `${Math.trunc((finishNum/pageNum)*100)}%`;
+    document.querySelector('#page-progress').style.cssText = `--position:${pagePercent};`
+
+    let imgPercent;
+    if (imgNum !== 0) {
+        imgPercent = `${Math.trunc((finishImgNum/imgNum)*100)}%`;
+        document.querySelector('#img-progress').style.cssText = `--position:${imgPercent};`;
+    } else {
+        document.querySelector('#img-progress').style.cssText = 'display:none;';
     }
 }
 
