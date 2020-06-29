@@ -183,7 +183,6 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
             background-image:-webkit-radial-gradient(var(--position),circle closest-side,var(--color),var(--color) 100%,transparent),-webkit-linear-gradient(var(--color),var(--color));
             background-size:100% ,var(--position);
             background-repeat: no-repeat;
-            margin-bottom: 5px;
         }
         #img-progress{
             --color:purple;
@@ -196,6 +195,7 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
             background-image:-webkit-radial-gradient(var(--position),circle closest-side,var(--color),var(--color) 100%,transparent),-webkit-linear-gradient(var(--color),var(--color));
             background-size:100% ,var(--position);
             background-repeat: no-repeat;
+            margin-top: 5px;
         }
         `
         document.head.appendChild(progressStyle);

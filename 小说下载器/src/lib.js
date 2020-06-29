@@ -155,7 +155,7 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
             if (n.alt) { alt = n.alt }
 
             let imgTask = { 'url': url, 'filename': filename, 'retry': 0 };
-            if (!imgTaskQueueSet.has(url)) {
+            if (url.startsWith('http') && !imgTaskQueueSet.has(url)) {
                 imgTaskQueueSet.add(url);
                 imgTaskQueue.push(imgTask);
             }

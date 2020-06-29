@@ -23,7 +23,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.2.2
+// @version     1.3.2.3
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器，目前支持起点、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -675,7 +675,6 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
             background-image:-webkit-radial-gradient(var(--position),circle closest-side,var(--color),var(--color) 100%,transparent),-webkit-linear-gradient(var(--color),var(--color));
             background-size:100% ,var(--position);
             background-repeat: no-repeat;
-            margin-bottom: 5px;
         }
         #img-progress{
             --color:purple;
@@ -688,6 +687,7 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
             background-image:-webkit-radial-gradient(var(--position),circle closest-side,var(--color),var(--color) 100%,transparent),-webkit-linear-gradient(var(--color),var(--color));
             background-size:100% ,var(--position);
             background-repeat: no-repeat;
+            margin-top: 5px;
         }
         `
         document.head.appendChild(progressStyle);
@@ -1017,7 +1017,7 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
             if (n.alt) { alt = n.alt }
 
             let imgTask = { 'url': url, 'filename': filename, 'retry': 0 };
-            if (!imgTaskQueueSet.has(url)) {
+            if (url.startsWith('http') && !imgTaskQueueSet.has(url)) {
                 imgTaskQueueSet.add(url);
                 imgTaskQueue.push(imgTask);
             }
