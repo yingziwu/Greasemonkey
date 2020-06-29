@@ -14,11 +14,12 @@
 // @match       http://www.shouda8.com/*/
 // @match       https://www.shouda8.com/*/
 // @match       https://book.qidian.com/info/*
+// @match       https://www.ciweimao.com/chapter-list/*
 // @grant       unsafeWindow
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     1.1
+// @version     1.3.0
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -34,6 +35,7 @@ const urls = new Map([
     ["www.xkzw.org", "http://www.xkzw.org/xkzw66086/"],
     ["www.shouda8.com", "http://www.shouda8.com/11342/"],
     ["book.qidian.com", "https://book.qidian.com/info/1010939791"],
+    ["www.ciweimao.com", "https://www.ciweimao.com/chapter-list/100169403/book_detail"]
 ])
 
 window.addEventListener('load', function() {
@@ -42,18 +44,29 @@ window.addEventListener('load', function() {
     if (host == "greasyfork.org") {
         GM_registerMenuCommand('Start Rule test', openTab)
     } else if (urls.has(host)) {
-        const rule = unsafeWindow.rule;
-        const main = unsafeWindow.main;
-        const ruleTest = unsafeWindow.ruleTest;
-        setTimeout(ruleTest, 10000 * Math.random(), rule, testCallback);
+        setTimeout(run, 1500 + 3000 * Math.random());
     }
 })
+
+function run() {
+    console.log('Start ruleTest……')
+    const rule = unsafeWindow.rule;
+    const main = unsafeWindow.main;
+    const ruleTest = unsafeWindow.ruleTest;
+
+    const linkList = rule.linkList();
+    ruleTest(rule, testCallback)
+}
 
 
 function openTab() {
     for (let url of urls.values()) {
         console.log(url);
-        GM_openInTab(url);
+        if (Array.isArray(url)) {
+            url.forEach(u => GM_openInTab(u));
+        } else {
+            GM_openInTab(url);
+        }
     }
 }
 
@@ -65,9 +78,12 @@ function testCallback(obj) {
     <div><ul id="linkList"></ul></div>
     <div><br/></div>
     <hr/>
+    <div><br/></div>
     <pre>${obj.pageObj.txt}</pre>
     <div><br/></div>
+    <div><br/></div>
     <hr/>
+    <h2>${obj.pageObj.chapterName}</h2>
     <div>${obj.pageObj.dom.innerHTML}</div>
     `
     let l = document.querySelector('#linkList');

@@ -32,9 +32,12 @@
 
     以上2个函数在小说章节页运行，输入值 `doc` 为小说章节页的 `document` 。
 
-    变量名	 功能	           备注
-    charset	网站响应的编码方式	可选
-    CORS	抓取章节时是否跨域	可选
+    变量名	                功能	                    备注
+    charset	            网站响应的编码方式	             可选
+    CORS	            抓取章节时是否跨域	             可选
+    maxRetryTimes       最大重试次数（默认为3）           可选
+    maxConcurrency      下载文本时最大并发数（默认为10）   可选
+    maxImgConcurrency   下载图片时最大并发数（默认为5）    可选
 
     若网站返回的响应非 UTF-8 编码，请添加 charset 变量注明编码方式。网站当前编码方式可通过 document.charset 查看。
     对于起点这样抓取章节页需要跨域的网站，请将 CORS 设为 true 。
@@ -51,9 +54,9 @@
     ruleTest(rule)          函数    测试抓取规则
     gfetch(url,option)      函数	使用 GM_xmlhttpRequest 进行请求
 
+    url                 the destination URL
     gfetch 可用 option 选项：
     method              one of GET, HEAD, POST
-    url                 the destination URL
     headers             ie. user-agent, referer, ... (some special headers are not supported by Safari and Android browsers)
     data                some string to send via a POST request
     cookie              a cookie to be patched into the sent cookie set

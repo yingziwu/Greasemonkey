@@ -1,3 +1,4 @@
 const enableDebug = false;
-const maxRetryTimes = 3;
-const maxConcurrency = 10;
+const defaultMaxRetryTimes = 3;
+const defaultMaxConcurrency = 10;
+const defaultMaxImgConcurrency = 5;

@@ -124,18 +124,6 @@ const rules = new Map([
             runEval(CryptoJS);
             return doc.querySelector('#content')
 
-
-            async function loadCryptoJs() {
-                if (!unsafeWindow.CryptoJS) {
-                    const url = 'https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js';
-                    let response = await fetch(url);
-                    let scriptText = await response.text();
-                    eval(scriptText)
-                }
-                const CryptoJS = unsafeWindow.CryptoJS;
-                return CryptoJS
-            }
-
             function runEval(CryptoJS) {
                 // 以下部分来自 http://www.xkzw.org/js/c.js 中的去除混淆后的解密代码
                 // 本人将原代码中 document 修改为 doc
@@ -239,54 +227,138 @@ const rules = new Map([
         content: function(doc) { return doc.querySelector('.read-content') },
         CORS: true,
     }],
-]);
+    ["www.ciweimao.com", {
+        bookname() { return document.querySelector('.book-catalog .hd h3').innerText.trim(); },
+        author() { return document.querySelector('.book-catalog .hd > p > a').innerText.trim(); },
+        intro: async() => {
+            const bookid = unsafeWindow.HB.book.book_id;
+            const indexUrl = 'https://www.ciweimao.com/book/' + bookid;
+            return (crossPage(indexUrl, "convertDomNode(doc.querySelector('.book-intro-cnt .book-desc'))[0]"));
+        },
+        linkList() {
+            document.querySelectorAll('.book-chapter-list > li > a > i').forEach(i => i.parentElement.classList.add('not_download'));
+            return document.querySelectorAll('.book-chapter-list > li > a:not(.not_download)');
+        },
+        coverUrl: async() => {
+            const bookid = unsafeWindow.HB.book.book_id;
+            const indexUrl = 'https://www.ciweimao.com/book/' + bookid;
+            return (crossPage(indexUrl, "doc.querySelector('.cover > img').src"));
+        },
+        chapterName: function(doc) {
+            rm('h3.chapter i', false, doc);
+            return doc.querySelector('h3.chapter').innerText.trim();
+        },
+        content: async function(doc) {
+            const CryptoJS = await loadCryptoJs();
 
-function rm(selector, All, doc) {
-    if (!doc) { doc = document }
-    if (All) {
-        let rs = doc.querySelectorAll(selector);
-        rs.forEach(e => e.remove());
-    } else {
-        let r = doc.querySelector(selector);
-        if (r) { r.remove() }
-    }
-}
+            const url = doc.baseURI;
+            const chapter_id = url.split('/').slice(-1)[0];
 
-function includeLatestChapter(selector) {
-    let dl = document.querySelector(selector);
-    let rDt = dl.querySelector('dt:nth-child(1)')
-    if (rDt.innerText.includes('最新章节')) {
-        let p = null;
-        let n = rDt;
-        while (true) {
-            if (n.nodeName == 'DD') {
-                p = n;
-                n = n.nextSibling;
-                p.classList.add('not_download')
-            } else if (n.nodeName == 'DT' && !n.innerText.includes('最新章节')) {
-                break;
-            } else {
-                p = n;
-                n = n.nextSibling;
+            let _chapter_author_says = doc.querySelectorAll('#J_BookCnt .chapter.author_say');
+            let div_chapter_author_say;
+            if (_chapter_author_says.length !== 0) {
+                let hr = document.createElement('hr');
+                div_chapter_author_say = document.createElement('div');
+                div_chapter_author_say.appendChild(hr);
+                for (let _chapter_author_say of _chapter_author_says) {
+                    rm('i', true, _chapter_author_say);
+                    div_chapter_author_say.appendChild(_chapter_author_say);
+                }
             }
-        }
-    }
-    return dl.querySelectorAll('dd:not(.not_download) > a')
-}
 
-async function crossPage(url, functionString, charset) {
-    let text;
-    if (charset === undefined) {
-        text = await fetch(url).then(response => response.text())
-    } else {
-        text = await fetch(url)
-            .then(response => response.arrayBuffer())
-            .then(buffer => {
-                let decoder = new TextDecoder(charset);
-                let text = decoder.decode(buffer);
-                return text
-            })
-    }
-    const doc = (new DOMParser()).parseFromString(text, 'text/html');
-    return (eval(functionString))
-}
+            let content = document.createElement('div');
+            let decryptDate;
+            while (true) {
+                if (!window.lock) {
+                    window.lock = true;
+                    decryptDate = await chapterDecrypt(chapter_id, url).catch(error => {
+                        console.error(error);
+                        chapterDecrypt(chapter_id, url);
+                    }).catch(error => { window.lock = false; });
+                    window.lock = false;
+                    break;
+                } else {
+                    await sleep(17);
+                }
+            }
+            content.innerHTML = decryptDate;
+            rm('.chapter span', true, content);
+            if (_chapter_author_says.length !== 0) { content.appendChild(div_chapter_author_say); }
+            return content;
+
+
+            async function chapterDecrypt(chapter_id, refererUrl) {
+                const rootPath = 'https://www.ciweimao.com/';
+                const access_key_url = rootPath + "chapter/ajax_get_session_code";
+                const chapter_content_url = rootPath + "chapter/get_book_chapter_detail_info";
+
+                console.log(`请求 ${access_key_url} Referer ${refererUrl}`);
+                const access_key_obj = await gfetch(access_key_url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json, text/javascript, */*; q=0.01',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'Referer': refererUrl,
+                        'Origin': 'https://www.ciweimao.com',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    data: `chapter_id=${chapter_id}`,
+                    responseType: 'json'
+                }).then(response => response.response);
+                const chapter_access_key = access_key_obj.chapter_access_key;
+
+                console.log(`请求 ${chapter_content_url} Referer ${refererUrl}`);
+                const chapter_content_obj = await gfetch(chapter_content_url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json, text/javascript, */*; q=0.01',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'Referer': refererUrl,
+                        'Origin': 'https://www.ciweimao.com',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    data: `chapter_id=${chapter_id}&chapter_access_key=${chapter_access_key}`,
+                    responseType: 'json'
+                }).then(response => response.response);
+
+                if (chapter_content_obj.code !== 100000) { console.error(chapter_content_obj); throw new Error(`下载 ${refererUrl} 失败`) }
+                return decrypt({
+                    'content': chapter_content_obj.chapter_content,
+                    'keys': chapter_content_obj.encryt_keys,
+                    'accessKey': chapter_access_key
+                })
+            }
+
+            function decrypt(item) {
+                var message = item.content;
+                var keys = item.keys;
+                var len = item.keys.length;
+                var accessKey = item.accessKey;
+                var accessKeyList = accessKey.split("");
+                var charsNotLatinNum = accessKeyList.length;
+
+                var output = new Array;
+                output.push(keys[accessKeyList[charsNotLatinNum - 1].charCodeAt(0) % len]);
+                output.push(keys[accessKeyList[0].charCodeAt(0) % len]);
+
+                for (let i = 0; i < output.length; i++) {
+                    message = atob(message);
+                    var data = output[i];
+                    var iv = btoa(message.substr(0, 16));
+                    var keys255 = btoa(message.substr(16));
+                    var pass = CryptoJS.format.OpenSSL.parse(keys255);
+                    message = CryptoJS.AES.decrypt(pass, CryptoJS.enc.Base64.parse(data), {
+                        iv: CryptoJS.enc.Base64.parse(iv),
+                        format: CryptoJS.format.OpenSSL
+                    });
+                    if (i < output.length - 1) {
+                        message = message.toString(CryptoJS.enc.Base64);
+                        message = atob(message);
+                    }
+                }
+                return message.toString(CryptoJS.enc.Utf8);
+            }
+        },
+        maxConcurrency: 3,
+    }],
+]);

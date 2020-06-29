@@ -13,16 +13,19 @@
 // @match       http://www.shouda8.com/*/
 // @match       https://www.shouda8.com/*/
 // @match       https://book.qidian.com/info/*
+// @match       https://www.ciweimao.com/chapter-list/*
 // @grant       unsafeWindow
+// @grant       GM_info
 // @grant       GM_xmlhttpRequest
 // @connect     img.shouda8.com
 // @connect     read.qidian.com
+// @connect     kuangxiangit.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.2.2.2
+// @version     1.3.1.8
 // @author      bgme
-// @description 一个从笔趣阁这样的小说网站下载小说的通用脚本
+// @description 一个可扩展的通用型小说下载器，目前支持起点、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
 // @icon        https://greasyfork.org/assets/blacklogo96-1221dbbb8f0d47a728f968c35c2e2e03c64276a585b8dceb7a79a17a3f350e8a.png
 // @license     AGPL-3.0-or-later
@@ -63,9 +66,12 @@
 
     以上2个函数在小说章节页运行，输入值 `doc` 为小说章节页的 `document` 。
 
-    变量名	 功能	           备注
-    charset	网站响应的编码方式	可选
-    CORS	抓取章节时是否跨域	可选
+    变量名	                功能	                    备注
+    charset	            网站响应的编码方式	             可选
+    CORS	            抓取章节时是否跨域	             可选
+    maxRetryTimes       最大重试次数（默认为3）           可选
+    maxConcurrency      下载文本时最大并发数（默认为10）   可选
+    maxImgConcurrency   下载图片时最大并发数（默认为5）    可选
 
     若网站返回的响应非 UTF-8 编码，请添加 charset 变量注明编码方式。网站当前编码方式可通过 document.charset 查看。
     对于起点这样抓取章节页需要跨域的网站，请将 CORS 设为 true 。
@@ -82,9 +88,9 @@
     ruleTest(rule)          函数    测试抓取规则
     gfetch(url,option)      函数	使用 GM_xmlhttpRequest 进行请求
 
+    url                 the destination URL
     gfetch 可用 option 选项：
     method              one of GET, HEAD, POST
-    url                 the destination URL
     headers             ie. user-agent, referer, ... (some special headers are not supported by Safari and Android browsers)
     data                some string to send via a POST request
     cookie              a cookie to be patched into the sent cookie set
@@ -113,8 +119,9 @@
 
 
 const enableDebug = false;
-const maxRetryTimes = 3;
-const maxConcurrency = 10;
+const defaultMaxRetryTimes = 3;
+const defaultMaxConcurrency = 10;
+const defaultMaxImgConcurrency = 5;
 
 
 const rules = new Map([
@@ -243,18 +250,6 @@ const rules = new Map([
             runEval(CryptoJS);
             return doc.querySelector('#content')
 
-
-            async function loadCryptoJs() {
-                if (!unsafeWindow.CryptoJS) {
-                    const url = 'https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js';
-                    let response = await fetch(url);
-                    let scriptText = await response.text();
-                    eval(scriptText)
-                }
-                const CryptoJS = unsafeWindow.CryptoJS;
-                return CryptoJS
-            }
-
             function runEval(CryptoJS) {
                 // 以下部分来自 http://www.xkzw.org/js/c.js 中的去除混淆后的解密代码
                 // 本人将原代码中 document 修改为 doc
@@ -358,73 +353,175 @@ const rules = new Map([
         content: function(doc) { return doc.querySelector('.read-content') },
         CORS: true,
     }],
-]);
+    ["www.ciweimao.com", {
+        bookname() { return document.querySelector('.book-catalog .hd h3').innerText.trim(); },
+        author() { return document.querySelector('.book-catalog .hd > p > a').innerText.trim(); },
+        intro: async() => {
+            const bookid = unsafeWindow.HB.book.book_id;
+            const indexUrl = 'https://www.ciweimao.com/book/' + bookid;
+            return (crossPage(indexUrl, "convertDomNode(doc.querySelector('.book-intro-cnt .book-desc'))[0]"));
+        },
+        linkList() {
+            document.querySelectorAll('.book-chapter-list > li > a > i').forEach(i => i.parentElement.classList.add('not_download'));
+            return document.querySelectorAll('.book-chapter-list > li > a:not(.not_download)');
+        },
+        coverUrl: async() => {
+            const bookid = unsafeWindow.HB.book.book_id;
+            const indexUrl = 'https://www.ciweimao.com/book/' + bookid;
+            return (crossPage(indexUrl, "doc.querySelector('.cover > img').src"));
+        },
+        chapterName: function(doc) {
+            rm('h3.chapter i', false, doc);
+            return doc.querySelector('h3.chapter').innerText.trim();
+        },
+        content: async function(doc) {
+            const CryptoJS = await loadCryptoJs();
 
-function rm(selector, All, doc) {
-    if (!doc) { doc = document }
-    if (All) {
-        let rs = doc.querySelectorAll(selector);
-        rs.forEach(e => e.remove());
-    } else {
-        let r = doc.querySelector(selector);
-        if (r) { r.remove() }
-    }
-}
+            const url = doc.baseURI;
+            const chapter_id = url.split('/').slice(-1)[0];
 
-function includeLatestChapter(selector) {
-    let dl = document.querySelector(selector);
-    let rDt = dl.querySelector('dt:nth-child(1)')
-    if (rDt.innerText.includes('最新章节')) {
-        let p = null;
-        let n = rDt;
-        while (true) {
-            if (n.nodeName == 'DD') {
-                p = n;
-                n = n.nextSibling;
-                p.classList.add('not_download')
-            } else if (n.nodeName == 'DT' && !n.innerText.includes('最新章节')) {
-                break;
-            } else {
-                p = n;
-                n = n.nextSibling;
+            let _chapter_author_says = doc.querySelectorAll('#J_BookCnt .chapter.author_say');
+            let div_chapter_author_say;
+            if (_chapter_author_says.length !== 0) {
+                let hr = document.createElement('hr');
+                div_chapter_author_say = document.createElement('div');
+                div_chapter_author_say.appendChild(hr);
+                for (let _chapter_author_say of _chapter_author_says) {
+                    rm('i', true, _chapter_author_say);
+                    div_chapter_author_say.appendChild(_chapter_author_say);
+                }
             }
-        }
-    }
-    return dl.querySelectorAll('dd:not(.not_download) > a')
-}
 
-async function crossPage(url, functionString, charset) {
-    let text;
-    if (charset === undefined) {
-        text = await fetch(url).then(response => response.text())
-    } else {
-        text = await fetch(url)
-            .then(response => response.arrayBuffer())
-            .then(buffer => {
-                let decoder = new TextDecoder(charset);
-                let text = decoder.decode(buffer);
-                return text
-            })
-    }
-    const doc = (new DOMParser()).parseFromString(text, 'text/html');
-    return (eval(functionString))
-}
+            let content = document.createElement('div');
+            let decryptDate;
+            while (true) {
+                if (!window.lock) {
+                    window.lock = true;
+                    decryptDate = await chapterDecrypt(chapter_id, url).catch(error => {
+                        console.error(error);
+                        chapterDecrypt(chapter_id, url);
+                    }).catch(error => { window.lock = false; });
+                    window.lock = false;
+                    break;
+                } else {
+                    await sleep(17);
+                }
+            }
+            content.innerHTML = decryptDate;
+            rm('.chapter span', true, content);
+            if (_chapter_author_says.length !== 0) { content.appendChild(div_chapter_author_say); }
+            return content;
+
+
+            async function chapterDecrypt(chapter_id, refererUrl) {
+                const rootPath = 'https://www.ciweimao.com/';
+                const access_key_url = rootPath + "chapter/ajax_get_session_code";
+                const chapter_content_url = rootPath + "chapter/get_book_chapter_detail_info";
+
+                console.log(`请求 ${access_key_url} Referer ${refererUrl}`);
+                const access_key_obj = await gfetch(access_key_url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json, text/javascript, */*; q=0.01',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'Referer': refererUrl,
+                        'Origin': 'https://www.ciweimao.com',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    data: `chapter_id=${chapter_id}`,
+                    responseType: 'json'
+                }).then(response => response.response);
+                const chapter_access_key = access_key_obj.chapter_access_key;
+
+                console.log(`请求 ${chapter_content_url} Referer ${refererUrl}`);
+                const chapter_content_obj = await gfetch(chapter_content_url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json, text/javascript, */*; q=0.01',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'Referer': refererUrl,
+                        'Origin': 'https://www.ciweimao.com',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    data: `chapter_id=${chapter_id}&chapter_access_key=${chapter_access_key}`,
+                    responseType: 'json'
+                }).then(response => response.response);
+
+                if (chapter_content_obj.code !== 100000) { console.error(chapter_content_obj); throw new Error(`下载 ${refererUrl} 失败`) }
+                return decrypt({
+                    'content': chapter_content_obj.chapter_content,
+                    'keys': chapter_content_obj.encryt_keys,
+                    'accessKey': chapter_access_key
+                })
+            }
+
+            function decrypt(item) {
+                var message = item.content;
+                var keys = item.keys;
+                var len = item.keys.length;
+                var accessKey = item.accessKey;
+                var accessKeyList = accessKey.split("");
+                var charsNotLatinNum = accessKeyList.length;
+
+                var output = new Array;
+                output.push(keys[accessKeyList[charsNotLatinNum - 1].charCodeAt(0) % len]);
+                output.push(keys[accessKeyList[0].charCodeAt(0) % len]);
+
+                for (let i = 0; i < output.length; i++) {
+                    message = atob(message);
+                    var data = output[i];
+                    var iv = btoa(message.substr(0, 16));
+                    var keys255 = btoa(message.substr(16));
+                    var pass = CryptoJS.format.OpenSSL.parse(keys255);
+                    message = CryptoJS.AES.decrypt(pass, CryptoJS.enc.Base64.parse(data), {
+                        iv: CryptoJS.enc.Base64.parse(iv),
+                        format: CryptoJS.format.OpenSSL
+                    });
+                    if (i < output.length - 1) {
+                        message = message.toString(CryptoJS.enc.Base64);
+                        message = atob(message);
+                    }
+                }
+                return message.toString(CryptoJS.enc.Utf8);
+            }
+        },
+        maxConcurrency: 3,
+    }],
+]);
 
 
 const host = document.location.host;
 const rule = rules.get(host);
 const charset = rule.charset;
 const CORS = rule.CORS;
+const customMaxRetryTimes = rule.maxRetryTimes;
+const customMaxConcurrency = rule.maxConcurrency;
+const customMaxImgConcurrency = rule.maxImgConcurrency;
+
+let maxRetryTimes, maxConcurrency, maxImgConcurrency;
+if (customMaxRetryTimes) { maxRetryTimes = customMaxRetryTimes } else { maxRetryTimes = defaultMaxRetryTimes }
+if (customMaxConcurrency) { maxConcurrency = customMaxConcurrency } else { maxConcurrency = defaultMaxConcurrency }
+if (customMaxImgConcurrency) { maxImgConcurrency = customMaxImgConcurrency } else { maxImgConcurrency = defaultMaxImgConcurrency }
+
 const icon0 = 'data:image/png;base64,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';
 const icon1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAANSAAADUgEQACRKAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAUdQTFRF////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiYSOVQAAAGx0Uk5TAAECAwQFCAkKCwwNDhETFRkaHB0fICMkKCwwNTg5PD1AQUZKTk9QV1tcX2BjZGhtb3B2eHl6fX6AgYKHi4+QlJicnaChpamur7C3uru+v8LEyMzP0NXZ3N3f4OTn6uvt7/Hy8/T2+Pn6/P3+VI4wmgAAAyxJREFUeNrtmVdT4zAUhTFs6BB6Cb13WLpooffeQjW9hMT//3mVJbsT4li6ahbD6D4y5p5vzrGuFDkry5QpznLSygAYAANgAAyAATAABsAAGAADYAAMgAEwAD8XADlChTQTIM0eIM0pIM3vAdL8JiLNawFpXo1I8zxAmicS0jwTkeapjDTvC8r0gQQK9UEESvUBBIr1qQTK9SkESvR/wQkQ5V95KhS+Q1AC14N34ZCYenD0LGNjoH7ij2ejQV71QPd2lNQapI8rut0d4LMe0Bz4CHMUSetZCGgPMESRYj1cAGARMIqv1kMlgK8pNQq39TARBB8VhCgyW59S414y6frjxDYeUYTCNnnKHw4WeUxl1/wtGjwk97LToyBan6irmRrPfSHj/K+ZuSJ3TImCav3zaqvlvTN57T9W6+ozJAqa9fH9/gLS3kja/wr69+PUKMhGXUxVie0mVVMXZAUSwONys4ztvHn5kQcgttubJ+tEkde7G2MEiExUyD3VVExE4AAPS40qTlaNSw8QgI+dnlxVx8ncnp0PCsD5WJnaI23Z2Lk3wP1igx83jA2L998V4G8E5WrVy0kRfIeXMLkMm1TIN8GWYXIQTVbKVa+cjLCO4r2+fFnq+X17MZ7N6GmlxRJXt1pWnjh3Q1yX09Vi8tXTl/zb8eeB5GCgkFe9cOAgTutPBcD1stbGEYXVtvYCaA4BwHU9W8smXzt7DesMBMB1NFQMVS8eOgK3hQM4zut6ezZdPbt9/ZWhKQsArpu5OrJ83dwNW0dGAFzHwyVe6iXDx8zt2AEc522jI8etntOx8cbRjAcA1+18/Vf5+vlbvk6cALhORkr/qZeOnHC34QdwnPfNTvzjLtC5+S7QRAQg8eNuYcEW6yAIIF4GQD8A9W5IZX3eFQW6tqI61KNbXf9vy4K/T/2Wd90X+hqFnfHG1K8oUq1nuqpVZD3zjal865nvjBVY74pC/qpg/nYkNQqb6+uZrChYrFcQhcBnOwlR2KIfLoUGlIj1EgaUsPVCUcixnjcKmdZzRCHdeqYo1FgPjUKl9YAolFtPjMIf672i8NP6DFH4br2pH1d/AAm28mJJn9pPAAAAAElFTkSuQmCC';
 let nowWorking = 0;
 let downloading = false;
+let corsDomains = new Set();
+
+let imgNowWorking = 0;
+let imgTaskQueue = [];
+let imgTaskQueueSet = new Set();
+let imgWorkerResolved = new Map();
+let imgWorkerRejected = new Map();
+
 
 window.addEventListener('DOMContentLoaded', async function() {
+    console.log(`开始载入小说下载器……\n当前脚本管理器：${GM_info.scriptHandler}\n当前脚本管理器版本：${GM_info.version}\n当前脚本版本：${GM_info.script.version}\n是否开启调试模式：${enableDebug}`);
+    if (enableDebug) { debug() }
     let linkList;
     if (rule.linkList[Symbol.toStringTag] == 'AsyncFunction') { await rule.linkList().then(result => linkList = result) } else { linkList = rule.linkList() }
     if (linkList) { addButton() }
-    if (enableDebug) { debug() }
 })
 
 
@@ -470,20 +567,25 @@ async function main(rule) {
     let pageWorkerRejected = new Map();
 
     let loopId = setInterval(loop, 300);
+    let imgLoopId = setInterval(imgDownLoop, 800)
 
     function loop() {
         let finishNum = pageWorkerResolved.size + pageWorkerRejected.size;
-        if (finishNum !== pageNum) {
+        let finishImgNum = imgWorkerResolved.size + imgWorkerRejected.size;
+        if (finishNum !== pageNum || finishImgNum !== imgTaskQueueSet.size) {
             for (let i = nowWorking; i < maxConcurrency; i++) {
                 const pageTask = pageTaskQueue.pop();
                 if (pageTask) {
                     nowWorking++;
                     console.log(`开始下载：${pageTask.id}\t${pageTask.dom.innerText}\t${pageTask.url}\t第${pageTask.retry}次重试`);
                     pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
+                } else {
+                    break;
                 }
             }
         } else {
             clearInterval(loopId);
+            clearInterval(imgLoopId);
             save(pageWorkerResolved, bookname, author, infoText, cover, pageNum);
         }
     }
@@ -510,7 +612,14 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
     const saveBaseFileName = `[${author}]${bookname}`;
     saveAs((new Blob([savedTxt], { type: "text/plain;charset=utf-8" })), saveBaseFileName + '.txt');
     savedZip.file('info.txt', (new Blob([infoText], { type: "text/plain;charset=utf-8" })));
+
     savedZip.file(`cover.${cover.type}`, cover.file);
+    for (let entry of imgWorkerResolved) {
+        let filename, imgObj;
+        [filename, imgObj] = entry;
+        savedZip.file(filename, imgObj.file);
+    }
+
     savedZip.generateAsync({
             type: "blob",
             compression: "DEFLATE",
@@ -547,8 +656,7 @@ async function getMetadate(rule) {
     if (rule.linkList[Symbol.toStringTag] == 'AsyncFunction') { await rule.linkList().then(result => linkList = result) } else { linkList = rule.linkList() }
     if (rule.coverUrl[Symbol.toStringTag] == 'AsyncFunction') { await rule.coverUrl().then(result => coverUrl = result) } else { coverUrl = rule.coverUrl() }
 
-    const coverObj = await imgWorker({ 'url': coverUrl, 'filename': 'cover' })
-    cover = coverObj.imgObject;
+    cover = await imgWorker({ 'url': coverUrl, 'filename': 'cover', 'retry': 0 });
     intro = intro.replace(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
     infoText = `题名：${bookname}\n作者：${author}\n简介：${intro}\n来源：${document.location.href}`;
@@ -565,8 +673,9 @@ function genPageTaskQueue(linkList) {
 }
 
 function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule) {
-    let id = pageTask.id;
-    let url = pageTask.url;
+    const id = pageTask.id;
+    const url = pageTask.url;
+    const host = (new URL(url)).host;
     let retry = pageTask.retry;
     let dom = pageTask.dom;
 
@@ -634,6 +743,29 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     }
 }
 
+function imgDownLoop() {
+    for (let i = imgNowWorking; i < maxImgConcurrency; i++) {
+        const imgTask = imgTaskQueue.pop();
+        if (!imgTask) { return }
+
+        const filename = imgTask.filename;
+        imgWorker(imgTask).then(
+            imgObj => imgWorkerResolved.set(filename, imgObj),
+            errorObj => {
+                let error, newImgTask;
+                [error, newImgTask] = errorObj;
+                console.error(error);
+                const newRetry = newImgTask.retry;
+                if (newRetry > maxImgConcurrency) {
+                    imgWorkerRejected.set(filename, error)
+                } else {
+                    imgTaskQueue.push(newImgTask);
+                }
+            }
+        );
+    }
+}
+
 async function extractData(id, url, text, rule, pageWorkerResolved) {
     let doc = (new DOMParser()).parseFromString(text, 'text/html');
     let base;
@@ -662,41 +794,85 @@ async function extractData(id, url, text, rule, pageWorkerResolved) {
 }
 
 
-async function imgWorker(imgTask) {
+function imgWorker(imgTask) {
     const url = imgTask.url;
     const filename = imgTask.filename;
+    let retry = imgTask.retry;
 
-    let imgObject;
-    await fetch(url)
-        .then(response => {
-                imgObject = {
-                    'type': response.headers.get('Content-Type').split('/')[1],
-                    'file': response.blob(),
-                    'url': response.url
-                };
-            },
-            async error => {
-                console.error(error);
-                console.log(`try GM_xmlhttpRequest:\t${url}`);
-                await gfetch(url, { responseType: 'blob' })
-                    .then(response => {
-                        const _headers = response.responseHeaders.split('\r\n');
-                        let headers = {};
-                        for (let _header of _headers) {
-                            let k, v;
-                            [k, v] = _header.split(/:\s+/);
-                            headers[k] = v;
-                        }
-                        imgObject = {
-                            'type': headers['content-type'].split('/')[1],
-                            'file': response.response,
-                            'url': response.finalUrl
+    const host = (new URL(url)).host;
+    console.log(`正在下载图片:${filename}\t${url}`);
+
+    return new Promise((resolve, reject) => {
+        if (corsDomains.has(host)) {
+            imgNowWorking++;
+            gfetch(url, { responseType: 'blob' })
+                .then(response => {
+                    if (imgNowWorking > 0) { imgNowWorking-- }
+                    const _headers = response.responseHeaders.split('\r\n');
+                    let headers = {};
+                    for (let _header of _headers) {
+                        let k, v;
+                        [k, v] = _header.split(/:\s+/);
+                        headers[k] = v;
+                    }
+                    const imgObject = {
+                        'type': headers['content-type'].split('/')[1],
+                        'file': response.response,
+                        'url': response.finalUrl
+                    };
+                    resolve(imgObject);
+                })
+                .catch(error => {
+                    if (imgNowWorking > 0) { imgNowWorking-- }
+                    retry++
+                    const newImgTask = { 'url': url, 'filename': filename, 'retry': retry };
+                    reject([error, newImgTask]);
+                })
+        } else {
+            imgNowWorking++
+            fetch(url)
+                .then(
+                    response => {
+                        if (imgNowWorking > 0) { imgNowWorking-- }
+                        const imgObject = {
+                            'type': response.headers.get('Content-Type').split('/')[1],
+                            'file': response.blob(),
+                            'url': response.url
                         };
+                        resolve(imgObject);
+                    },
+                    error => {
+                        if (imgNowWorking > 0) { imgNowWorking-- }
+                        retry++
+                        imgNowWorking++;
+                        gfetch(url, { responseType: 'blob' })
+                            .then(response => {
+                                if (imgNowWorking > 0) { imgNowWorking-- }
+                                const _headers = response.responseHeaders.split('\r\n');
+                                let headers = {};
+                                for (let _header of _headers) {
+                                    let k, v;
+                                    [k, v] = _header.split(/:\s+/);
+                                    headers[k] = v;
+                                }
+                                const imgObject = {
+                                    'type': headers['content-type'].split('/')[1],
+                                    'file': response.response,
+                                    'url': response.finalUrl
+                                };
+                                corsDomains.add(host);
+                                console.log(`将 ${host} 加入跨域请求列表`)
+                                resolve(imgObject);
+                            })
                     })
-            })
-
-    const output = { 'filename': filename, 'imgObject': imgObject }
-    return output
+                .catch(error => {
+                    if (imgNowWorking > 0) { imgNowWorking-- }
+                    retry++
+                    const newImgTask = { 'url': url, 'filename': filename, 'retry': retry };
+                    reject([error, newImgTask]);
+                })
+        }
+    })
 }
 
 
@@ -751,17 +927,59 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
     if (nodeType3.includes(nNodeName)) {
         //pass
     } else if (nNodeName === 'BR') {
-        brc++
-    } else if (nNodeName == 'HR') {
-        txtOut = txtOut + '\n' + '-'.repeat(15) + 'n';
+        if (nodeType2.includes(r.nodeName) && r.childElementCount === r.querySelectorAll('br').length) {
+            for (let i = 0; i < r.querySelectorAll('br').length; i++) {
+                if (r.childNodes[i].nodeName == 'BR') {
+                    r.childNodes[i].classList.add('remove');
+                } else {
+                    brc++
+                    break;
+                }
+            }
+        } else {
+            brc++
+        }
+    } else if (nNodeName === 'HR') {
+        txtOut = txtOut + '\n\n' + '-'.repeat(15);
         let hr = document.createElement('hr');
         htmlOut.appendChild(hr);
+    } else if (nNodeName === 'IMG') {
+        const url = n.src;
+        if (url) {
+            const filename = url.split('/').splice(-1)[0];
+            let alt;
+            if (n.alt) { alt = n.alt }
+
+            let imgTask = { 'url': url, 'filename': filename, 'retry': 0 };
+            if (!imgTaskQueueSet.has(url)) {
+                imgTaskQueueSet.add(url);
+                imgTaskQueue.push(imgTask);
+            }
+
+            txtOut = txtOut + '\n\n' + `[Image filename:${filename} url:${url}]`
+            let img = document.createElement('img');
+            img.src = filename;
+            if (alt) { img.alt = alt }
+            htmlOut.appendChild(img)
+
+            if (nodeType2.includes(r.nodeName)) {
+                brc = 0;
+            }
+        }
+    } else if (nNodeName === 'A' && n.childElementCount === 0) {
+        txtOut = txtOut + `[link ${n.innerText} href: ${n.href}]`
+
+        let newLink = document.createElement('a');
+        newLink.href = n.href;
+        newLink.innerText = n.innerText.trim();
+        lastNode.appendChild(newLink);
     } else if (nNodeName === '#text') {
         const nodetext = n.textContent.trim()
             .replace(/(\s+)?\n+(\s+)?/g, '').replace(/\s+/, ' ');
+        let specialBr = r.querySelectorAll('br').length !== 0 && r.querySelectorAll('br').length === r.querySelectorAll('br.remove').length
         if (nodetext) {
-            if (brc === 0) {
-                if (nodeType2.includes(pNodeName)) {
+            if (brc === 0 || specialBr) {
+                if (nodeType2.includes(pNodeName) || specialBr) {
                     txtOut = txtOut + '\n'.repeat(2) + nodetext;
                     let p0 = document.createElement('p');
                     p0.innerText = nodetext;
@@ -836,6 +1054,72 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
 }
 
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function rm(selector, All, doc) {
+    if (!doc) { doc = document }
+    if (All) {
+        let rs = doc.querySelectorAll(selector);
+        rs.forEach(e => e.remove());
+    } else {
+        let r = doc.querySelector(selector);
+        if (r) { r.remove() }
+    }
+}
+
+function includeLatestChapter(selector) {
+    let dl = document.querySelector(selector);
+    let rDt = dl.querySelector('dt:nth-child(1)')
+    if (rDt.innerText.includes('最新章节')) {
+        let p = null;
+        let n = rDt;
+        while (true) {
+            if (n.nodeName == 'DD') {
+                p = n;
+                n = n.nextSibling;
+                p.classList.add('not_download')
+            } else if (n.nodeName == 'DT' && !n.innerText.includes('最新章节')) {
+                break;
+            } else {
+                p = n;
+                n = n.nextSibling;
+            }
+        }
+    }
+    return dl.querySelectorAll('dd:not(.not_download) > a')
+}
+
+async function crossPage(url, functionString, charset) {
+    let text;
+    if (charset === undefined) {
+        text = await fetch(url).then(response => response.text())
+    } else {
+        text = await fetch(url)
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                let decoder = new TextDecoder(charset);
+                let text = decoder.decode(buffer);
+                return text
+            })
+    }
+    const doc = (new DOMParser()).parseFromString(text, 'text/html');
+    return (eval(functionString))
+}
+
+async function loadCryptoJs() {
+    if (!unsafeWindow.CryptoJS) {
+        const url = 'https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js';
+        let response = await fetch(url);
+        let scriptText = await response.text();
+        eval(scriptText)
+    }
+    const CryptoJS = unsafeWindow.CryptoJS;
+    return CryptoJS
+}
+
+
 function debug() {
     unsafeWindow.rule = rule;
     unsafeWindow.main = main;
@@ -853,7 +1137,7 @@ async function ruleTest(rule, callback) {
     console.log('linkList: ', linkList);
     outpubObj = { 'infoText': infoText, 'cover': cover, 'linkList': linkList };
 
-    let blob = await cover.file;
+    let blob = cover.file;
     let coverImg = document.createElement('img');
     coverImg.src = URL.createObjectURL(blob);
     coverImg.onclick = function() { this.remove() };
@@ -861,7 +1145,10 @@ async function ruleTest(rule, callback) {
     document.body.appendChild(coverImg);
     outpubObj['coverImg'] = coverImg;
 
-    let pageTaskQueue = [{ 'id': 0, 'url': linkList[0].href, 'retry': 0, 'dom': linkList[0] }];
+    let rad = Math.trunc(linkList.length * Math.random());
+    let url = linkList[rad].href
+
+    let pageTaskQueue = [{ 'id': rad, 'url': url, 'retry': rad, 'dom': linkList[rad] }];
     let pageWorkerResolved = new Map();
     let pageWorkerRejected = new Map();
 
@@ -876,7 +1163,7 @@ async function ruleTest(rule, callback) {
             }
         } else {
             clearInterval(loopId);
-            let result = pageWorkerResolved.get(0);
+            let result = pageWorkerResolved.get(rad);
             outpubObj['pageObj'] = result;
             if (callback) { callback(outpubObj) }
             console.log(result);

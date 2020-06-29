@@ -1,38 +1,82 @@
-async function imgWorker(imgTask) {
+function imgWorker(imgTask) {
     const url = imgTask.url;
     const filename = imgTask.filename;
+    let retry = imgTask.retry;
 
-    let imgObject;
-    await fetch(url)
-        .then(response => {
-                imgObject = {
-                    'type': response.headers.get('Content-Type').split('/')[1],
-                    'file': response.blob(),
-                    'url': response.url
-                };
-            },
-            async error => {
-                console.error(error);
-                console.log(`try GM_xmlhttpRequest:\t${url}`);
-                await gfetch(url, { responseType: 'blob' })
-                    .then(response => {
-                        const _headers = response.responseHeaders.split('\r\n');
-                        let headers = {};
-                        for (let _header of _headers) {
-                            let k, v;
-                            [k, v] = _header.split(/:\s+/);
-                            headers[k] = v;
-                        }
-                        imgObject = {
-                            'type': headers['content-type'].split('/')[1],
-                            'file': response.response,
-                            'url': response.finalUrl
+    const host = (new URL(url)).host;
+    console.log(`正在下载图片:${filename}\t${url}`);
+
+    return new Promise((resolve, reject) => {
+        if (corsDomains.has(host)) {
+            imgNowWorking++;
+            gfetch(url, { responseType: 'blob' })
+                .then(response => {
+                    if (imgNowWorking > 0) { imgNowWorking-- }
+                    const _headers = response.responseHeaders.split('\r\n');
+                    let headers = {};
+                    for (let _header of _headers) {
+                        let k, v;
+                        [k, v] = _header.split(/:\s+/);
+                        headers[k] = v;
+                    }
+                    const imgObject = {
+                        'type': headers['content-type'].split('/')[1],
+                        'file': response.response,
+                        'url': response.finalUrl
+                    };
+                    resolve(imgObject);
+                })
+                .catch(error => {
+                    if (imgNowWorking > 0) { imgNowWorking-- }
+                    retry++
+                    const newImgTask = { 'url': url, 'filename': filename, 'retry': retry };
+                    reject([error, newImgTask]);
+                })
+        } else {
+            imgNowWorking++
+            fetch(url)
+                .then(
+                    response => {
+                        if (imgNowWorking > 0) { imgNowWorking-- }
+                        const imgObject = {
+                            'type': response.headers.get('Content-Type').split('/')[1],
+                            'file': response.blob(),
+                            'url': response.url
                         };
+                        resolve(imgObject);
+                    },
+                    error => {
+                        if (imgNowWorking > 0) { imgNowWorking-- }
+                        retry++
+                        imgNowWorking++;
+                        gfetch(url, { responseType: 'blob' })
+                            .then(response => {
+                                if (imgNowWorking > 0) { imgNowWorking-- }
+                                const _headers = response.responseHeaders.split('\r\n');
+                                let headers = {};
+                                for (let _header of _headers) {
+                                    let k, v;
+                                    [k, v] = _header.split(/:\s+/);
+                                    headers[k] = v;
+                                }
+                                const imgObject = {
+                                    'type': headers['content-type'].split('/')[1],
+                                    'file': response.response,
+                                    'url': response.finalUrl
+                                };
+                                corsDomains.add(host);
+                                console.log(`将 ${host} 加入跨域请求列表`)
+                                resolve(imgObject);
+                            })
                     })
-            })
-
-    const output = { 'filename': filename, 'imgObject': imgObject }
-    return output
+                .catch(error => {
+                    if (imgNowWorking > 0) { imgNowWorking-- }
+                    retry++
+                    const newImgTask = { 'url': url, 'filename': filename, 'retry': retry };
+                    reject([error, newImgTask]);
+                })
+        }
+    })
 }
 
 
@@ -87,17 +131,59 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
     if (nodeType3.includes(nNodeName)) {
         //pass
     } else if (nNodeName === 'BR') {
-        brc++
-    } else if (nNodeName == 'HR') {
-        txtOut = txtOut + '\n' + '-'.repeat(15) + 'n';
+        if (nodeType2.includes(r.nodeName) && r.childElementCount === r.querySelectorAll('br').length) {
+            for (let i = 0; i < r.querySelectorAll('br').length; i++) {
+                if (r.childNodes[i].nodeName == 'BR') {
+                    r.childNodes[i].classList.add('remove');
+                } else {
+                    brc++
+                    break;
+                }
+            }
+        } else {
+            brc++
+        }
+    } else if (nNodeName === 'HR') {
+        txtOut = txtOut + '\n\n' + '-'.repeat(15);
         let hr = document.createElement('hr');
         htmlOut.appendChild(hr);
+    } else if (nNodeName === 'IMG') {
+        const url = n.src;
+        if (url) {
+            const filename = url.split('/').splice(-1)[0];
+            let alt;
+            if (n.alt) { alt = n.alt }
+
+            let imgTask = { 'url': url, 'filename': filename, 'retry': 0 };
+            if (!imgTaskQueueSet.has(url)) {
+                imgTaskQueueSet.add(url);
+                imgTaskQueue.push(imgTask);
+            }
+
+            txtOut = txtOut + '\n\n' + `[Image filename:${filename} url:${url}]`
+            let img = document.createElement('img');
+            img.src = filename;
+            if (alt) { img.alt = alt }
+            htmlOut.appendChild(img)
+
+            if (nodeType2.includes(r.nodeName)) {
+                brc = 0;
+            }
+        }
+    } else if (nNodeName === 'A' && n.childElementCount === 0) {
+        txtOut = txtOut + `[link ${n.innerText} href: ${n.href}]`
+
+        let newLink = document.createElement('a');
+        newLink.href = n.href;
+        newLink.innerText = n.innerText.trim();
+        lastNode.appendChild(newLink);
     } else if (nNodeName === '#text') {
         const nodetext = n.textContent.trim()
             .replace(/(\s+)?\n+(\s+)?/g, '').replace(/\s+/, ' ');
+        let specialBr = r.querySelectorAll('br').length !== 0 && r.querySelectorAll('br').length === r.querySelectorAll('br.remove').length
         if (nodetext) {
-            if (brc === 0) {
-                if (nodeType2.includes(pNodeName)) {
+            if (brc === 0 || specialBr) {
+                if (nodeType2.includes(pNodeName) || specialBr) {
                     txtOut = txtOut + '\n'.repeat(2) + nodetext;
                     let p0 = document.createElement('p');
                     p0.innerText = nodetext;

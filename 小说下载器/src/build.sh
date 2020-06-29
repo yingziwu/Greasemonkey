@@ -11,6 +11,7 @@ cat setting.js black.tmp >> $output_path
 cat rules.js black.tmp >> $output_path
 cat main.js black.tmp >> $output_path
 cat lib.js black.tmp >> $output_path
+cat lib_rule.js black.tmp >> $output_path
 cat debug.js >> $output_path
 
 rm black.tmp

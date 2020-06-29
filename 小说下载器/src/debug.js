@@ -15,7 +15,7 @@ async function ruleTest(rule, callback) {
     console.log('linkList: ', linkList);
     outpubObj = { 'infoText': infoText, 'cover': cover, 'linkList': linkList };
 
-    let blob = await cover.file;
+    let blob = cover.file;
     let coverImg = document.createElement('img');
     coverImg.src = URL.createObjectURL(blob);
     coverImg.onclick = function() { this.remove() };
@@ -23,7 +23,10 @@ async function ruleTest(rule, callback) {
     document.body.appendChild(coverImg);
     outpubObj['coverImg'] = coverImg;
 
-    let pageTaskQueue = [{ 'id': 0, 'url': linkList[0].href, 'retry': 0, 'dom': linkList[0] }];
+    let rad = Math.trunc(linkList.length * Math.random());
+    let url = linkList[rad].href
+
+    let pageTaskQueue = [{ 'id': rad, 'url': url, 'retry': rad, 'dom': linkList[rad] }];
     let pageWorkerResolved = new Map();
     let pageWorkerRejected = new Map();
 
@@ -38,7 +41,7 @@ async function ruleTest(rule, callback) {
             }
         } else {
             clearInterval(loopId);
-            let result = pageWorkerResolved.get(0);
+            let result = pageWorkerResolved.get(rad);
             outpubObj['pageObj'] = result;
             if (callback) { callback(outpubObj) }
             console.log(result);

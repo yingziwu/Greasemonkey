@@ -16,7 +16,7 @@
 
 ## 目前支持小说网站
 
-- [起点—免费章节](https://www.qidian.com/)
+- [起点](https://www.qidian.com/)、[刺猬猫](www.ciweimao.com)的免费章节
 - [亿软小说](http://www.yruan.com/)、[精彩小说网](https://www.jingcaiyuedu.com/)、[书趣阁](http://www.shuquge.com/)、[顶点小说](https://www.dingdiann.com/)、[2k小说阅读网](https://www.fpzw.com/)、[和图书](https://www.hetushu.com/)、[笔趣窝](http://www.biquwo.org/)、[星空文学](http://www.xkzw.org/)、[手打吧](http://www.shouda8.com/)
 
 ## 添加更多网站
@@ -62,6 +62,9 @@
 |----|----|-----|
 |`charset`|网站响应的编码方式|可选|
 |`CORS`|抓取章节时是否跨域|可选|
+|`maxRetryTimes` |最大重试次数（默认为3） |可选|
+|`maxConcurrency` |下载文本时最大并发数（默认为10）|可选|
+|`maxImgConcurrency` |下载图片时最大并发数（默认为5）|可选|
 
 若网站返回的响应非 `UTF-8` 编码，请添加 `charset` 变量注明编码方式。网站当前编码方式可通过 `document.charset` 查看。
 
