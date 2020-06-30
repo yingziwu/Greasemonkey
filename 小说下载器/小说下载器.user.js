@@ -16,6 +16,7 @@
 // @match       https://www.ciweimao.com/chapter-list/*
 // @match       http://www.jjwxc.net/onebook.php?novelid=*
 // @exclude     http://www.jjwxc.net/onebook.php?novelid=*&chapterid=*
+// @match       http://book.sfacg.com/Novel/*/MainIndex/
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -27,7 +28,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.3.10
+// @version     1.3.4.0
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器，目前支持起点、晋江、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -522,6 +523,24 @@ const rules = new Map([
             return content
         },
         charset: 'GB18030',
+    }],
+    ['book.sfacg.com', {
+        bookname() { return document.querySelector('h1.story-title').innerText.trim() },
+        author: async() => {
+            const indexUrl = document.location.href.replace('/MainIndex/', '');
+            return (crossPage(indexUrl, "doc.querySelector('.author-name').innerText.trim()"))
+        },
+        intro: async() => {
+            const indexUrl = document.location.href.replace('/MainIndex/', '');
+            return (crossPage(indexUrl, "convertDomNode(doc.querySelector('.introduce'))[0]"))
+        },
+        linkList() { return document.querySelectorAll('.catalog-list li a:not([href^="/vip"])') },
+        coverUrl: async() => {
+            const indexUrl = document.location.href.replace('/MainIndex/', '');
+            return (crossPage(indexUrl, "doc.querySelector('.summary-pic img').src"))
+        },
+        chapterName: function(doc) { return doc.querySelector('h1.article-title').innerText.trim() },
+        content: function(doc) { return doc.querySelector('.article-content') },
     }],
 ]);
 

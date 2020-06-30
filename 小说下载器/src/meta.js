@@ -16,6 +16,7 @@
 // @match       https://www.ciweimao.com/chapter-list/*
 // @match       http://www.jjwxc.net/onebook.php?novelid=*
 // @exclude     http://www.jjwxc.net/onebook.php?novelid=*&chapterid=*
+// @match       http://book.sfacg.com/Novel/*/MainIndex/
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -27,9 +28,9 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.3.10
+// @version     1.3.4.0
 // @author      bgme
-// @description 一个可扩展的通用型小说下载器，目前支持起点、晋江、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
+// @description 一个可扩展的通用型小说下载器，目前支持起点、晋江、SFACG、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
 // @icon        https://greasyfork.org/assets/blacklogo96-1221dbbb8f0d47a728f968c35c2e2e03c64276a585b8dceb7a79a17a3f350e8a.png
 // @license     AGPL-3.0-or-later

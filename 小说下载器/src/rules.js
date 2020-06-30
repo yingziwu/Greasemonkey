@@ -393,4 +393,22 @@ const rules = new Map([
         },
         charset: 'GB18030',
     }],
+    ['book.sfacg.com', {
+        bookname() { return document.querySelector('h1.story-title').innerText.trim() },
+        author: async() => {
+            const indexUrl = document.location.href.replace('/MainIndex/', '');
+            return (crossPage(indexUrl, "doc.querySelector('.author-name').innerText.trim()"))
+        },
+        intro: async() => {
+            const indexUrl = document.location.href.replace('/MainIndex/', '');
+            return (crossPage(indexUrl, "convertDomNode(doc.querySelector('.introduce'))[0]"))
+        },
+        linkList() { return document.querySelectorAll('.catalog-list li a:not([href^="/vip"])') },
+        coverUrl: async() => {
+            const indexUrl = document.location.href.replace('/MainIndex/', '');
+            return (crossPage(indexUrl, "doc.querySelector('.summary-pic img').src"))
+        },
+        chapterName: function(doc) { return doc.querySelector('h1.article-title').innerText.trim() },
+        content: function(doc) { return doc.querySelector('.article-content') },
+    }],
 ]);

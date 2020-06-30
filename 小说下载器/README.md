@@ -1,6 +1,6 @@
 # 小说下载器
 
-本脚本是一个**可扩展的**通用型小说下载器，适用于大多数静态小说网站。
+本脚本是一个**可扩展的**通用型小说下载器，适用于大多数小说网站。
 
 ## 使用方法
 
@@ -16,7 +16,7 @@
 
 ## 目前支持小说网站
 
-- [起点](https://www.qidian.com/)、[晋江](http://www.jjwxc.net/)、[刺猬猫](https://www.ciweimao.com)的免费章节
+- [起点](https://www.qidian.com/)、[晋江](http://www.jjwxc.net/)、[SF轻小说](http://book.sfacg.com/)、[刺猬猫](https://www.ciweimao.com)的免费章节
 - [亿软小说](http://www.yruan.com/)、[精彩小说网](https://www.jingcaiyuedu.com/)、[书趣阁](http://www.shuquge.com/)、[顶点小说](https://www.dingdiann.com/)、[2k小说阅读网](https://www.fpzw.com/)、[和图书](https://www.hetushu.com/)、[笔趣窝](http://www.biquwo.org/)、[星空文学](http://www.xkzw.org/)、[手打吧](http://www.shouda8.com/)
 
 ## 添加更多网站
