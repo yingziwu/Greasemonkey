@@ -29,7 +29,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     if (enableDebug) { debug() }
     let linkList;
     if (rule.linkList[Symbol.toStringTag] == 'AsyncFunction') { await rule.linkList().then(result => linkList = result) } else { linkList = rule.linkList() }
-    if (linkList) { addButton() }
+    if (linkList.length !== 0) { addButton() }
 })
 
 
@@ -230,7 +230,16 @@ async function getMetadate(rule) {
     if (rule.linkList[Symbol.toStringTag] == 'AsyncFunction') { await rule.linkList().then(result => linkList = result) } else { linkList = rule.linkList() }
     if (rule.coverUrl[Symbol.toStringTag] == 'AsyncFunction') { await rule.coverUrl().then(result => coverUrl = result) } else { coverUrl = rule.coverUrl() }
 
-    cover = await imgWorker({ 'url': coverUrl, 'filename': 'cover', 'retry': 0 });
+    cover = await imgWorker({ 'url': coverUrl, 'filename': 'cover', 'retry': 0 })
+        .catch(error => {
+            console.error(error);
+            let file = new Blob(['下载封面失败'], { type: "text/plain;charset=utf-8" });
+            return {
+                'type': 'txt',
+                'file': file,
+                'url': coverUrl
+            }
+        });
     intro = intro.replace(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
     infoText = `题名：${bookname}\n作者：${author}\n简介：${intro}\n来源：${document.location.href}`;
@@ -317,29 +326,6 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     }
 }
 
-function imgDownLoop() {
-    for (let i = imgNowWorking; i < maxImgConcurrency; i++) {
-        const imgTask = imgTaskQueue.pop();
-        if (!imgTask) { return }
-
-        const filename = imgTask.filename;
-        imgWorker(imgTask).then(
-            imgObj => imgWorkerResolved.set(filename, imgObj),
-            errorObj => {
-                let error, newImgTask;
-                [error, newImgTask] = errorObj;
-                console.error(error);
-                const newRetry = newImgTask.retry;
-                if (newRetry > maxImgConcurrency) {
-                    imgWorkerRejected.set(filename, error)
-                } else {
-                    imgTaskQueue.push(newImgTask);
-                }
-            }
-        );
-    }
-}
-
 async function extractData(id, url, text, rule, pageWorkerResolved) {
     let doc = (new DOMParser()).parseFromString(text, 'text/html');
     let base;
@@ -365,4 +351,27 @@ async function extractData(id, url, text, rule, pageWorkerResolved) {
         'txt': txtOut,
         'dom': htmlOut
     });
+}
+
+function imgDownLoop() {
+    for (let i = imgNowWorking; i < maxImgConcurrency; i++) {
+        const imgTask = imgTaskQueue.pop();
+        if (!imgTask) { return }
+
+        const filename = imgTask.filename;
+        imgWorker(imgTask).then(
+            imgObj => imgWorkerResolved.set(filename, imgObj),
+            errorObj => {
+                let error, newImgTask;
+                [error, newImgTask] = errorObj;
+                console.error(error);
+                const newRetry = newImgTask.retry;
+                if (newRetry > maxImgConcurrency) {
+                    imgWorkerRejected.set(filename, error)
+                } else {
+                    imgTaskQueue.push(newImgTask);
+                }
+            }
+        );
+    }
 }

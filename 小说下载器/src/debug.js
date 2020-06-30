@@ -15,7 +15,7 @@ async function ruleTest(rule, callback) {
     console.log('linkList: ', linkList);
     outpubObj = { 'infoText': infoText, 'cover': cover, 'linkList': linkList };
 
-    let blob = cover.file;
+    let blob = await cover.file;
     let coverImg = document.createElement('img');
     coverImg.src = URL.createObjectURL(blob);
     coverImg.onclick = function() { this.remove() };

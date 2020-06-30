@@ -14,18 +14,22 @@
 // @match       https://www.shouda8.com/*/
 // @match       https://book.qidian.com/info/*
 // @match       https://www.ciweimao.com/chapter-list/*
+// @match       http://www.jjwxc.net/onebook.php?novelid=*
+// @exclude     http://www.jjwxc.net/onebook.php?novelid=*&chapterid=*
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
 // @connect     img.shouda8.com
 // @connect     read.qidian.com
 // @connect     kuangxiangit.com
+// @connect     sinaimg.cn
+// @connect     jjwxc.net
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.2.3
+// @version     1.3.3.10
 // @author      bgme
-// @description 一个可扩展的通用型小说下载器，目前支持起点、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
+// @description 一个可扩展的通用型小说下载器，目前支持起点、晋江、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
 // @icon        https://greasyfork.org/assets/blacklogo96-1221dbbb8f0d47a728f968c35c2e2e03c64276a585b8dceb7a79a17a3f350e8a.png
 // @license     AGPL-3.0-or-later
@@ -400,7 +404,10 @@ const rules = new Map([
                     decryptDate = await chapterDecrypt(chapter_id, url).catch(error => {
                         console.error(error);
                         chapterDecrypt(chapter_id, url);
-                    }).catch(error => { window.lock = false; });
+                    }).catch(error => {
+                        window.lock = false;
+                        throw error
+                    });
                     window.lock = false;
                     break;
                 } else {
@@ -487,6 +494,35 @@ const rules = new Map([
         },
         maxConcurrency: 3,
     }],
+    ['www.jjwxc.net', {
+        bookname() { return document.querySelector('h1[itemprop="name"] > span').innerText.trim() },
+        author() { return document.querySelector('td.sptd h2 a span').innerText.trim() },
+        intro() {
+            let intro = document.querySelector('#novelintro');
+            rm('img', true, intro);
+            return convertDomNode(intro)[0]
+        },
+        linkList() {
+            document.querySelectorAll('tr[itemprop="chapter"] > td:nth-child(2) > span font[color="red"]')
+                .forEach(font => font.parentElement.parentElement.parentElement.classList.add('not_download'));
+            return document.querySelectorAll('tr[itemprop*="chapter"] > td:nth-child(2) > span:not(.not_download) a')
+        },
+        coverUrl() { return document.querySelector('.noveldefaultimage').src },
+        chapterName: function(doc) { return doc.querySelector('div.noveltext h2').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('div.noveltext');
+            rm('div:first-child', false, content)
+            rm('div[style="display:none"]', true, content);
+            rm('#favoriteshow_3', false, content);
+            rm('div[align="right"]', true, content);
+            rm('div[style="clear: both;"]', true, content);
+            rm('div[style="width:710px;height:70px;float:right;"]', true, content);
+            rm('div.noveltext div.readsmall  > hr', true, content);
+            rm('div:first-child', false, content);
+            return content
+        },
+        charset: 'GB18030',
+    }],
 ]);
 
 
@@ -521,7 +557,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     if (enableDebug) { debug() }
     let linkList;
     if (rule.linkList[Symbol.toStringTag] == 'AsyncFunction') { await rule.linkList().then(result => linkList = result) } else { linkList = rule.linkList() }
-    if (linkList) { addButton() }
+    if (linkList.length !== 0) { addButton() }
 })
 
 
@@ -722,7 +758,16 @@ async function getMetadate(rule) {
     if (rule.linkList[Symbol.toStringTag] == 'AsyncFunction') { await rule.linkList().then(result => linkList = result) } else { linkList = rule.linkList() }
     if (rule.coverUrl[Symbol.toStringTag] == 'AsyncFunction') { await rule.coverUrl().then(result => coverUrl = result) } else { coverUrl = rule.coverUrl() }
 
-    cover = await imgWorker({ 'url': coverUrl, 'filename': 'cover', 'retry': 0 });
+    cover = await imgWorker({ 'url': coverUrl, 'filename': 'cover', 'retry': 0 })
+        .catch(error => {
+            console.error(error);
+            let file = new Blob(['下载封面失败'], { type: "text/plain;charset=utf-8" });
+            return {
+                'type': 'txt',
+                'file': file,
+                'url': coverUrl
+            }
+        });
     intro = intro.replace(/\n{2,}/g, '\n');
     sourceUrl = document.location.href;
     infoText = `题名：${bookname}\n作者：${author}\n简介：${intro}\n来源：${document.location.href}`;
@@ -809,29 +854,6 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     }
 }
 
-function imgDownLoop() {
-    for (let i = imgNowWorking; i < maxImgConcurrency; i++) {
-        const imgTask = imgTaskQueue.pop();
-        if (!imgTask) { return }
-
-        const filename = imgTask.filename;
-        imgWorker(imgTask).then(
-            imgObj => imgWorkerResolved.set(filename, imgObj),
-            errorObj => {
-                let error, newImgTask;
-                [error, newImgTask] = errorObj;
-                console.error(error);
-                const newRetry = newImgTask.retry;
-                if (newRetry > maxImgConcurrency) {
-                    imgWorkerRejected.set(filename, error)
-                } else {
-                    imgTaskQueue.push(newImgTask);
-                }
-            }
-        );
-    }
-}
-
 async function extractData(id, url, text, rule, pageWorkerResolved) {
     let doc = (new DOMParser()).parseFromString(text, 'text/html');
     let base;
@@ -857,6 +879,29 @@ async function extractData(id, url, text, rule, pageWorkerResolved) {
         'txt': txtOut,
         'dom': htmlOut
     });
+}
+
+function imgDownLoop() {
+    for (let i = imgNowWorking; i < maxImgConcurrency; i++) {
+        const imgTask = imgTaskQueue.pop();
+        if (!imgTask) { return }
+
+        const filename = imgTask.filename;
+        imgWorker(imgTask).then(
+            imgObj => imgWorkerResolved.set(filename, imgObj),
+            errorObj => {
+                let error, newImgTask;
+                [error, newImgTask] = errorObj;
+                console.error(error);
+                const newRetry = newImgTask.retry;
+                if (newRetry > maxImgConcurrency) {
+                    imgWorkerRejected.set(filename, error)
+                } else {
+                    imgTaskQueue.push(newImgTask);
+                }
+            }
+        );
+    }
 }
 
 
@@ -1026,26 +1071,34 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
             let img = document.createElement('img');
             img.src = filename;
             if (alt) { img.alt = alt }
-            htmlOut.appendChild(img)
+            if (r.nodeName !== 'A') {
+                htmlOut.appendChild(img);
+            } else {
+                lastNode.appendChild(img);
+            }
 
             if (nodeType2.includes(r.nodeName)) {
                 brc = 0;
             }
         }
-    } else if (nNodeName === 'A' && n.childElementCount === 0) {
-        txtOut = txtOut + `[link ${n.innerText} href: ${n.href}]`
+    } else if (nNodeName === 'A') {
+        if (n.childElementCount === 0) {
+            txtOut = txtOut + `[link ${n.innerText} href: ${n.href}]`
 
-        let newLink = document.createElement('a');
-        newLink.href = n.href;
-        newLink.innerText = n.innerText.trim();
-        lastNode.appendChild(newLink);
+            let newLink = document.createElement('a');
+            newLink.href = n.href;
+            newLink.innerText = n.innerText.trim();
+            lastNode.appendChild(newLink);
+        } else {
+            [txtOut, htmlOut, brc] = walker(null, n.childNodes[0], n, brc, txtOut, htmlOut);
+        }
     } else if (nNodeName === '#text') {
         const nodetext = n.textContent.trim()
             .replace(/(\s+)?\n+(\s+)?/g, '').replace(/\s+/, ' ');
         let specialBr = r.querySelectorAll('br').length !== 0 && r.querySelectorAll('br').length === r.querySelectorAll('br.remove').length
         if (nodetext) {
             if (brc === 0 || specialBr) {
-                if (nodeType2.includes(pNodeName) || specialBr) {
+                if ((nodeType2.includes(pNodeName) || specialBr) && r.nodeName !== 'A') {
                     txtOut = txtOut + '\n'.repeat(2) + nodetext;
                     let p0 = document.createElement('p');
                     p0.innerText = nodetext;
@@ -1203,7 +1256,7 @@ async function ruleTest(rule, callback) {
     console.log('linkList: ', linkList);
     outpubObj = { 'infoText': infoText, 'cover': cover, 'linkList': linkList };
 
-    let blob = cover.file;
+    let blob = await cover.file;
     let coverImg = document.createElement('img');
     coverImg.src = URL.createObjectURL(blob);
     coverImg.onclick = function() { this.remove() };

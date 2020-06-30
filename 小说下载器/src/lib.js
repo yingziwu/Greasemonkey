@@ -164,26 +164,34 @@ function walker(p, n, r, brc, txtOut, htmlOut) {
             let img = document.createElement('img');
             img.src = filename;
             if (alt) { img.alt = alt }
-            htmlOut.appendChild(img)
+            if (r.nodeName !== 'A') {
+                htmlOut.appendChild(img);
+            } else {
+                lastNode.appendChild(img);
+            }
 
             if (nodeType2.includes(r.nodeName)) {
                 brc = 0;
             }
         }
-    } else if (nNodeName === 'A' && n.childElementCount === 0) {
-        txtOut = txtOut + `[link ${n.innerText} href: ${n.href}]`
+    } else if (nNodeName === 'A') {
+        if (n.childElementCount === 0) {
+            txtOut = txtOut + `[link ${n.innerText} href: ${n.href}]`
 
-        let newLink = document.createElement('a');
-        newLink.href = n.href;
-        newLink.innerText = n.innerText.trim();
-        lastNode.appendChild(newLink);
+            let newLink = document.createElement('a');
+            newLink.href = n.href;
+            newLink.innerText = n.innerText.trim();
+            lastNode.appendChild(newLink);
+        } else {
+            [txtOut, htmlOut, brc] = walker(null, n.childNodes[0], n, brc, txtOut, htmlOut);
+        }
     } else if (nNodeName === '#text') {
         const nodetext = n.textContent.trim()
             .replace(/(\s+)?\n+(\s+)?/g, '').replace(/\s+/, ' ');
         let specialBr = r.querySelectorAll('br').length !== 0 && r.querySelectorAll('br').length === r.querySelectorAll('br.remove').length
         if (nodetext) {
             if (brc === 0 || specialBr) {
-                if (nodeType2.includes(pNodeName) || specialBr) {
+                if ((nodeType2.includes(pNodeName) || specialBr) && r.nodeName !== 'A') {
                     txtOut = txtOut + '\n'.repeat(2) + nodetext;
                     let p0 = document.createElement('p');
                     p0.innerText = nodetext;

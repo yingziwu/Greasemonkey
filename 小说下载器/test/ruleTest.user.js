@@ -15,11 +15,12 @@
 // @match       https://www.shouda8.com/*/
 // @match       https://book.qidian.com/info/*
 // @match       https://www.ciweimao.com/chapter-list/*
+// @match       http://www.jjwxc.net/onebook.php?novelid=*
 // @grant       unsafeWindow
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     1.3.0
+// @version     1.4.0
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -35,7 +36,8 @@ const urls = new Map([
     ["www.xkzw.org", "http://www.xkzw.org/xkzw66086/"],
     ["www.shouda8.com", "http://www.shouda8.com/11342/"],
     ["book.qidian.com", "https://book.qidian.com/info/1010939791"],
-    ["www.ciweimao.com", "https://www.ciweimao.com/chapter-list/100169403/book_detail"]
+    ["www.ciweimao.com", "https://www.ciweimao.com/chapter-list/100169403/book_detail"],
+    ["www.jjwxc.net", "http://www.jjwxc.net/onebook.php?novelid=1319256"],
 ])
 
 window.addEventListener('load', function() {

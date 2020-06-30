@@ -274,7 +274,10 @@ const rules = new Map([
                     decryptDate = await chapterDecrypt(chapter_id, url).catch(error => {
                         console.error(error);
                         chapterDecrypt(chapter_id, url);
-                    }).catch(error => { window.lock = false; });
+                    }).catch(error => {
+                        window.lock = false;
+                        throw error
+                    });
                     window.lock = false;
                     break;
                 } else {
@@ -360,5 +363,34 @@ const rules = new Map([
             }
         },
         maxConcurrency: 3,
+    }],
+    ['www.jjwxc.net', {
+        bookname() { return document.querySelector('h1[itemprop="name"] > span').innerText.trim() },
+        author() { return document.querySelector('td.sptd h2 a span').innerText.trim() },
+        intro() {
+            let intro = document.querySelector('#novelintro');
+            rm('img', true, intro);
+            return convertDomNode(intro)[0]
+        },
+        linkList() {
+            document.querySelectorAll('tr[itemprop="chapter"] > td:nth-child(2) > span font[color="red"]')
+                .forEach(font => font.parentElement.parentElement.parentElement.classList.add('not_download'));
+            return document.querySelectorAll('tr[itemprop*="chapter"] > td:nth-child(2) > span:not(.not_download) a')
+        },
+        coverUrl() { return document.querySelector('.noveldefaultimage').src },
+        chapterName: function(doc) { return doc.querySelector('div.noveltext h2').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('div.noveltext');
+            rm('div:first-child', false, content)
+            rm('div[style="display:none"]', true, content);
+            rm('#favoriteshow_3', false, content);
+            rm('div[align="right"]', true, content);
+            rm('div[style="clear: both;"]', true, content);
+            rm('div[style="width:710px;height:70px;float:right;"]', true, content);
+            rm('div.noveltext div.readsmall  > hr', true, content);
+            rm('div:first-child', false, content);
+            return content
+        },
+        charset: 'GB18030',
     }],
 ]);
