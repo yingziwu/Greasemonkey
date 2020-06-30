@@ -28,9 +28,9 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.4.0
+// @version     1.3.4.1
 // @author      bgme
-// @description 一个可扩展的通用型小说下载器，目前支持起点、晋江、刺猬猫的免费章节，以及笔趣阁、手打吧、和图书等其它网站。
+// @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等其他网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
 // @icon        https://greasyfork.org/assets/blacklogo96-1221dbbb8f0d47a728f968c35c2e2e03c64276a585b8dceb7a79a17a3f350e8a.png
 // @license     AGPL-3.0-or-later
@@ -752,9 +752,8 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
     let pagePercent = `${Math.trunc((finishNum/pageNum)*100)}%`;
     document.querySelector('#page-progress').style.cssText = `--position:${pagePercent};`
 
-    let imgPercent;
     if (imgNum !== 0) {
-        imgPercent = `${Math.trunc((finishImgNum/imgNum)*100)}%`;
+        let imgPercent = `${Math.trunc((finishImgNum/imgNum)*100)}%`;
         document.querySelector('#img-progress').style.cssText = `--position:${imgPercent};`;
     } else {
         document.querySelector('#img-progress').style.cssText = 'display:none;';

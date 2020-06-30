@@ -205,9 +205,8 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
     let pagePercent = `${Math.trunc((finishNum/pageNum)*100)}%`;
     document.querySelector('#page-progress').style.cssText = `--position:${pagePercent};`
 
-    let imgPercent;
     if (imgNum !== 0) {
-        imgPercent = `${Math.trunc((finishImgNum/imgNum)*100)}%`;
+        let imgPercent = `${Math.trunc((finishImgNum/imgNum)*100)}%`;
         document.querySelector('#img-progress').style.cssText = `--position:${imgPercent};`;
     } else {
         document.querySelector('#img-progress').style.cssText = 'display:none;';
