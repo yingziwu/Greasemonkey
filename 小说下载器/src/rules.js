@@ -149,28 +149,28 @@ const rules = new Map([
                             content = content.substring(17);
                             obj.innerHTML = gettt1(content, key, iv);
                             obj.style.display = "block";
-                            if (objTips) { objTips.style.display = "none" }
+                            if (objTips) { objTips.remove() }
                         } else if (type == 2) {
                             key = content.substring(1, 33);
                             iv = content.substring(33, 49);
                             content = content.substring(49);
                             obj.innerHTML = gettt2(content, key, iv);
                             obj.style.display = "block";
-                            if (objTips) { objTips.style.display = "none" }
+                            if (objTips) { objTips.remove() }
                         } else if (type == 3) {
                             key = content.substring(1, 9);
                             iv = content.substring(9, 17);
                             content = content.substring(17);
                             obj.innerHTML = gettt3(content, key, iv);
                             obj.style.display = "block";
-                            if (objTips) { objTips.style.display = "none" }
+                            if (objTips) { objTips.remove() }
                         } else {
                             key = content.substring(1, 25);
                             iv = content.substring(25, 33);
                             content = content.substring(33);
                             obj.innerHTML = getttn(content, key, iv);
                             obj.style.display = "block";
-                            if (objTips) { objTips.style.display = "none" }
+                            if (objTips) { objTips.remove() }
                         }
                     }
                 };

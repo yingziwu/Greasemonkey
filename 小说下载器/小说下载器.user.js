@@ -28,7 +28,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.4.1
+// @version     1.3.4.2
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等其他网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -280,28 +280,28 @@ const rules = new Map([
                             content = content.substring(17);
                             obj.innerHTML = gettt1(content, key, iv);
                             obj.style.display = "block";
-                            if (objTips) { objTips.style.display = "none" }
+                            if (objTips) { objTips.remove() }
                         } else if (type == 2) {
                             key = content.substring(1, 33);
                             iv = content.substring(33, 49);
                             content = content.substring(49);
                             obj.innerHTML = gettt2(content, key, iv);
                             obj.style.display = "block";
-                            if (objTips) { objTips.style.display = "none" }
+                            if (objTips) { objTips.remove() }
                         } else if (type == 3) {
                             key = content.substring(1, 9);
                             iv = content.substring(9, 17);
                             content = content.substring(17);
                             obj.innerHTML = gettt3(content, key, iv);
                             obj.style.display = "block";
-                            if (objTips) { objTips.style.display = "none" }
+                            if (objTips) { objTips.remove() }
                         } else {
                             key = content.substring(1, 25);
                             iv = content.substring(25, 33);
                             content = content.substring(33);
                             obj.innerHTML = getttn(content, key, iv);
                             obj.style.display = "block";
-                            if (objTips) { objTips.style.display = "none" }
+                            if (objTips) { objTips.remove() }
                         }
                     }
                 };
@@ -886,6 +886,8 @@ async function extractData(id, url, text, rule, pageWorkerResolved) {
     let chapterName, content;
     if (rule.chapterName[Symbol.toStringTag] == 'AsyncFunction') { await rule.chapterName(doc).then(result => chapterName = result) } else { chapterName = rule.chapterName(doc) }
     if (rule.content[Symbol.toStringTag] == 'AsyncFunction') { await rule.content(doc).then(result => content = result) } else { content = rule.content(doc) }
+    content = rm('[style*="display:none"]', true, content);
+    content = rm('[style*="display: none"]', true, content);
 
     let txtOut, htmlOut;
     [txtOut, htmlOut] = convertDomNode(content);
