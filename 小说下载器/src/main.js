@@ -339,8 +339,8 @@ async function extractData(id, url, text, rule, pageWorkerResolved) {
     let chapterName, content;
     if (rule.chapterName[Symbol.toStringTag] == 'AsyncFunction') { await rule.chapterName(doc).then(result => chapterName = result) } else { chapterName = rule.chapterName(doc) }
     if (rule.content[Symbol.toStringTag] == 'AsyncFunction') { await rule.content(doc).then(result => content = result) } else { content = rule.content(doc) }
-    content = rm('[style*="display:none"]', true, content);
-    content = rm('[style*="display: none"]', true, content);
+    rm('[style*="display:none"]', true, content);
+    rm('[style*="display: none"]', true, content);
 
     let txtOut, htmlOut;
     [txtOut, htmlOut] = convertDomNode(content);

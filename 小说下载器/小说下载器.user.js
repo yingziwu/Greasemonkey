@@ -28,7 +28,7 @@
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.4.2
+// @version     1.3.4.4
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等其他网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -503,11 +503,7 @@ const rules = new Map([
             rm('img', true, intro);
             return convertDomNode(intro)[0]
         },
-        linkList() {
-            document.querySelectorAll('tr[itemprop="chapter"] > td:nth-child(2) > span font[color="red"]')
-                .forEach(font => font.parentElement.parentElement.parentElement.classList.add('not_download'));
-            return document.querySelectorAll('tr[itemprop*="chapter"] > td:nth-child(2) > span:not(.not_download) a')
-        },
+        linkList() { return document.querySelectorAll('tr[itemprop*="chapter"] > td:nth-child(2) > span a[href]') },
         coverUrl() { return document.querySelector('.noveldefaultimage').src },
         chapterName: function(doc) { return doc.querySelector('div.noveltext h2').innerText.trim() },
         content: function(doc) {
@@ -886,8 +882,8 @@ async function extractData(id, url, text, rule, pageWorkerResolved) {
     let chapterName, content;
     if (rule.chapterName[Symbol.toStringTag] == 'AsyncFunction') { await rule.chapterName(doc).then(result => chapterName = result) } else { chapterName = rule.chapterName(doc) }
     if (rule.content[Symbol.toStringTag] == 'AsyncFunction') { await rule.content(doc).then(result => content = result) } else { content = rule.content(doc) }
-    content = rm('[style*="display:none"]', true, content);
-    content = rm('[style*="display: none"]', true, content);
+    rm('[style*="display:none"]', true, content);
+    rm('[style*="display: none"]', true, content);
 
     let txtOut, htmlOut;
     [txtOut, htmlOut] = convertDomNode(content);

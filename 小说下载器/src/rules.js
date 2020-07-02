@@ -372,11 +372,7 @@ const rules = new Map([
             rm('img', true, intro);
             return convertDomNode(intro)[0]
         },
-        linkList() {
-            document.querySelectorAll('tr[itemprop="chapter"] > td:nth-child(2) > span font[color="red"]')
-                .forEach(font => font.parentElement.parentElement.parentElement.classList.add('not_download'));
-            return document.querySelectorAll('tr[itemprop*="chapter"] > td:nth-child(2) > span:not(.not_download) a')
-        },
+        linkList() { return document.querySelectorAll('tr[itemprop*="chapter"] > td:nth-child(2) > span a[href]') },
         coverUrl() { return document.querySelector('.noveldefaultimage').src },
         chapterName: function(doc) { return doc.querySelector('div.noveltext h2').innerText.trim() },
         content: function(doc) {
