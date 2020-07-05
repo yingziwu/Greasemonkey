@@ -47,12 +47,12 @@
     调试功能：
     将 `enableDebug` 变量改为 `true` 可开启调试功能，开启之后可在控制台（console）中访问如下对象：
     
-    对象名	                 类型	  功能
-    rule                    变量    当前抓取规则
-    main(rule)              函数    运行下载器
-    convertDomNode(node)    函数    输出处理后的txt文本及Dom节点
-    ruleTest(rule)          函数    测试抓取规则
-    gfetch(url,option)      函数	使用 GM_xmlhttpRequest 进行请求
+    对象名	                    类型	  功能
+    rule                        变量    当前抓取规则
+    main(rule)                  函数    运行下载器
+    convertDomNode(node)        函数    输出处理后的txt文本及Dom节点
+    ruleTest(rule[, callback])  函数    测试抓取规则
+    gfetch(url,option)          函数	使用 GM_xmlhttpRequest 进行请求
 
     url                 the destination URL
     gfetch 可用 option 选项：
