@@ -17,6 +17,9 @@
 // @match       http://www.jjwxc.net/onebook.php?novelid=*
 // @exclude     http://www.jjwxc.net/onebook.php?novelid=*&chapterid=*
 // @match       http://book.sfacg.com/Novel/*/MainIndex/
+// @match       http://www.gebiqu.com/biquge_*/
+// @match       https://www.meegoq.com/book*.html
+// @exclude     https://www.meegoq.com/book/*.html
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -25,10 +28,13 @@
 // @connect     kuangxiangit.com
 // @connect     sinaimg.cn
 // @connect     jjwxc.net
+// @connect     image.gebiqu.com
+// @connect     qidian.qpic.cn
+// @connect     static.zongheng.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.4.4
+// @version     1.3.6.9
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等其他网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -533,10 +539,73 @@ const rules = new Map([
         linkList() { return document.querySelectorAll('.catalog-list li a:not([href^="/vip"])') },
         coverUrl: async() => {
             const indexUrl = document.location.href.replace('/MainIndex/', '');
-            return (crossPage(indexUrl, "doc.querySelector('.summary-pic img').src"))
+            return (crossPage(indexUrl, "doc.querySelector('#hasTicket div.pic img').src"))
         },
         chapterName: function(doc) { return doc.querySelector('h1.article-title').innerText.trim() },
         content: function(doc) { return doc.querySelector('.article-content') },
+    }],
+    ["www.gebiqu.com", {
+        bookname() { return document.querySelector('#info > h1').innerText.trim() },
+        author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者：/, '').trim() },
+        intro() {
+            let intro = document.querySelector('#intro');
+            intro.innerHTML = intro.innerHTML.replace(/如果您喜欢.+，别忘记分享给朋友/, '');
+            rm('a[href^="http://down.gebiqu.com"]', false, intro);
+            return convertDomNode(intro)[0]
+        },
+        linkList() { return includeLatestChapter('#list > dl:nth-child(1)') },
+        coverUrl() { return document.querySelector('#fmimg > img').src },
+        chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('#content');
+            content.innerHTML = content.innerHTML.replace('www.gebiqu.com', '');
+            return content
+        },
+    }],
+    ['www.meegoq.com', {
+        bookname() { return document.querySelector('article.info > header > h1').innerText.replace(/最新章节$/, '').trim() },
+        author: async() => {
+            const indexUrl = document.location.href.replace('/book', '/info');
+            return (crossPage(indexUrl, "doc.querySelector('article.info > p.detail.pt20 > i:nth-child(1) > a').innerText.trim()"))
+        },
+        intro: async() => {
+            const indexUrl = document.location.href.replace('/book', '/info');
+            let f = () => {
+                let intro = doc.querySelector('article.info > p.desc');
+                rm('b', false, intro);
+                return convertDomNode(intro)[0];
+            };
+            return (crossPage(indexUrl, `(${f.toString()})()`))
+        },
+        linkList() {
+            let ul = document.querySelector('ul.mulu');
+            let rLi = ul.querySelector('li:nth-child(1)');
+            if (rLi.innerText.match(/最新.章/)) {
+                let p = null;
+                let n = rLi;
+                while (true) {
+                    if (n.nodeName == 'LI' && n.childElementCount !== 0) {
+                        p = n;
+                        n = n.nextSibling;
+                        p.classList.add('not_download')
+                    } else if (n.nodeName == 'LI' && n.childElementCount === 0 && !n.innerText.match(/最新.章/)) {
+                        break;
+                    } else {
+                        p = n;
+                        n = n.nextSibling;
+                    }
+                }
+            }
+            return ul.querySelectorAll('li:not(.not_download) > a');
+        },
+        coverUrl: async() => {
+            const indexUrl = document.location.href.replace('/book', '/info');
+            return (crossPage(indexUrl, "doc.querySelector('article.info > div.cover > img').src"))
+        },
+        chapterName: function(doc) { return doc.querySelector('article > header > h1').innerText.trim() },
+        content: function(doc) { return doc.querySelector('#content') },
+        maxConcurrency: 1,
+        maxRetryTimes: 5,
     }],
 ]);
 
@@ -636,14 +705,15 @@ async function main(rule) {
                 }
             }
         } else {
+            updateProgress(finishNum, pageNum, finishImgNum, imgTaskQueueSet.size);
             clearInterval(loopId);
             clearInterval(imgLoopId);
-            save(pageWorkerResolved, bookname, author, infoText, cover, pageNum);
+            save(pageWorkerResolved, pageWorkerRejected, bookname, author, infoText, cover, pageNum);
         }
     }
 }
 
-function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
+function save(pageWorkerResolved, pageWorkerRejected, bookname, author, infoText, cover, pageNum) {
     console.log('保存文件中……')
     let sortKeys = [];
     for (let key of pageWorkerResolved.keys()) {
@@ -663,6 +733,15 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
 
     const saveBaseFileName = `[${author}]${bookname}`;
     saveAs((new Blob([savedTxt], { type: "text/plain;charset=utf-8" })), saveBaseFileName + '.txt');
+    if (pageWorkerRejected.size) {
+        let failedTxt = '';
+        for (let entry of pageWorkerRejected.entries()) {
+            let id, url;
+            [id, url] = entry;
+            failedTxt = failedTxt + `\n${id}\t${url}`;
+        }
+        savedZip.file('failed.txt', (new Blob([failedTxt], { type: "text/plain;charset=utf-8" })));
+    }
     savedZip.file('info.txt', (new Blob([infoText], { type: "text/plain;charset=utf-8" })));
 
     savedZip.file(`cover.${cover.type}`, cover.file);
@@ -678,13 +757,16 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
             compressionOptions: {
                 level: 6
             }
-        }).then((blob) => { saveAs(blob, saveBaseFileName + '.zip'); })
+        }, metadata => updateProgress(1, 1, 1, 1, metadata.percent))
+        .then((blob) => {
+            saveAs(blob, saveBaseFileName + '.zip');
+            document.querySelector('#progress').remove();
+        })
         .catch(err => console.log('saveZip: ' + err));
 
     downloading = false;
     document.querySelector('#novel-downloader > img').src = icon0;
     console.log('下载完毕！')
-    document.querySelector('#progress').remove();
 
     function compareNumeric(a, b) {
         if (a > b) return 1;
@@ -693,13 +775,14 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
     }
 }
 
-function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
+function updateProgress(finishNum, pageNum, finishImgNum, imgNum, zipPercent = null) {
     if (!document.querySelector('#progress')) {
         let progress = document.createElement('div');
         progress.id = 'progress';
         progress.innerHTML = `
         <div id='page-progress' title="页面"></div>
         <div id='img-progress' title="图片"></div>
+        <div id='zip-progress' title="ZIP"></div>
         `
         let progressStyle = document.createElement('style');
         progressStyle.innerHTML = `
@@ -740,6 +823,19 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
             background-repeat: no-repeat;
             margin-top: 5px;
         }
+        #zip-progress{
+            --color:yellow;
+            --position:0%;
+            width:200px;
+            height:10px;
+            border-radius:30px;
+            background-color:#ccc;
+            background-image:radial-gradient(closest-side circle at var(--position),var(--color),var(--color) 100%,transparent),linear-gradient(var(--color),var(--color));
+            background-image:-webkit-radial-gradient(var(--position),circle closest-side,var(--color),var(--color) 100%,transparent),-webkit-linear-gradient(var(--color),var(--color));
+            background-size:100% ,var(--position);
+            background-repeat: no-repeat;
+            margin-top: 5px;
+        }
         `
         document.head.appendChild(progressStyle);
         document.body.appendChild(progress);
@@ -753,6 +849,12 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
         document.querySelector('#img-progress').style.cssText = `--position:${imgPercent};`;
     } else {
         document.querySelector('#img-progress').style.cssText = 'display:none;';
+    }
+
+    if (zipPercent) {
+        document.querySelector('#zip-progress').style.cssText = `--position:${zipPercent}%;`;
+    } else {
+        document.querySelector('#zip-progress').style.cssText = 'display:none;';
     }
 }
 
@@ -808,54 +910,91 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     if (charset === undefined) {
         if (CORS) {
             text = gfetch(url).then(
-                response => response.responseText,
+                response => {
+                    if (response.status >= 200 && response.status <= 299) {
+                        return response.responseText;
+                    } else {
+                        throw new Error("Bad response!");
+                    }
+                },
                 error => {
                     nowWorking--;
-                    errorCallback(error)
+                    errorCallback(error);
                 }
-            )
+            ).catch(error => {
+                nowWorking--;
+                errorCallback(error);
+            });
         } else {
             text = fetch(url).then(
-                response => response.text(),
+                response => {
+                    if (response.ok) {
+                        return response.text()
+                    } else {
+                        throw new Error("Bad response!");
+                    }
+                },
                 error => {
                     nowWorking--;
-                    errorCallback(error)
+                    errorCallback(error);
                 }
-            )
+            ).catch(error => {
+                nowWorking--;
+                errorCallback(error);
+            });
         }
     } else {
         if (CORS) {
             text = gfetch(url, { responseType: 'arraybuffer' }).then(
-                response => response.response,
-                response => response.arrayBuffer(),
+                response => {
+                    if (response.status >= 200 && response.status <= 299) {
+                        return response.response
+                    } else {
+                        throw new Error("Bad response!");
+                    }
+                },
                 error => {
                     nowWorking--;
-                    errorCallback(error)
+                    errorCallback(error);
                 }).then(
                 buffer => {
                     let decoder = new TextDecoder(charset);
                     let text = decoder.decode(buffer);
                     return text
-                })
+                }).catch(error => {
+                nowWorking--;
+                errorCallback(error);
+            });
         } else {
             text = fetch(url).then(
-                response => response.arrayBuffer(),
+                response => {
+                    if (response.ok) {
+                        response.arrayBuffer()
+                    } else {
+                        throw new Error("Bad response!");
+                    }
+                },
                 error => {
                     nowWorking--;
-                    errorCallback(error)
+                    errorCallback(error);
                 }).then(
                 buffer => {
                     let decoder = new TextDecoder(charset);
                     let text = decoder.decode(buffer);
                     return text
-                })
+                }).catch(error => {
+                nowWorking--;
+                errorCallback(error);
+            });
         }
     }
 
     text.then(text => {
-        nowWorking--;
-        extractData(id, url, text, rule, pageWorkerResolved)
-    }).catch(error => errorCallback(error))
+        if (text) {
+            nowWorking--;
+            extractData(id, url, text, rule, pageWorkerResolved);
+        }
+    }).catch(error => errorCallback(error));
 
     function errorCallback(error) {
         console.error(id, url, pageTask, error);
@@ -863,7 +1002,7 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
         if (retry > maxRetryTimes) {
             pageWorkerRejected.set(id, url);
         } else {
-            pageTaskQueue.push({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
+            pageTaskQueue.unshift({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
         }
     }
 }

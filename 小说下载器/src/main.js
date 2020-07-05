@@ -93,14 +93,15 @@ async function main(rule) {
                 }
             }
         } else {
+            updateProgress(finishNum, pageNum, finishImgNum, imgTaskQueueSet.size);
             clearInterval(loopId);
             clearInterval(imgLoopId);
-            save(pageWorkerResolved, bookname, author, infoText, cover, pageNum);
+            save(pageWorkerResolved, pageWorkerRejected, bookname, author, infoText, cover, pageNum);
         }
     }
 }
 
-function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
+function save(pageWorkerResolved, pageWorkerRejected, bookname, author, infoText, cover, pageNum) {
     console.log('保存文件中……')
     let sortKeys = [];
     for (let key of pageWorkerResolved.keys()) {
@@ -120,6 +121,15 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
 
     const saveBaseFileName = `[${author}]${bookname}`;
     saveAs((new Blob([savedTxt], { type: "text/plain;charset=utf-8" })), saveBaseFileName + '.txt');
+    if (pageWorkerRejected.size) {
+        let failedTxt = '';
+        for (let entry of pageWorkerRejected.entries()) {
+            let id, url;
+            [id, url] = entry;
+            failedTxt = failedTxt + `\n${id}\t${url}`;
+        }
+        savedZip.file('failed.txt', (new Blob([failedTxt], { type: "text/plain;charset=utf-8" })));
+    }
     savedZip.file('info.txt', (new Blob([infoText], { type: "text/plain;charset=utf-8" })));
 
     savedZip.file(`cover.${cover.type}`, cover.file);
@@ -135,13 +145,16 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
             compressionOptions: {
                 level: 6
             }
-        }).then((blob) => { saveAs(blob, saveBaseFileName + '.zip'); })
+        }, metadata => updateProgress(1, 1, 1, 1, metadata.percent))
+        .then((blob) => {
+            saveAs(blob, saveBaseFileName + '.zip');
+            document.querySelector('#progress').remove();
+        })
         .catch(err => console.log('saveZip: ' + err));
 
     downloading = false;
     document.querySelector('#novel-downloader > img').src = icon0;
     console.log('下载完毕！')
-    document.querySelector('#progress').remove();
 
     function compareNumeric(a, b) {
         if (a > b) return 1;
@@ -150,13 +163,14 @@ function save(pageWorkerResolved, bookname, author, infoText, cover, pageNum) {
     }
 }
 
-function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
+function updateProgress(finishNum, pageNum, finishImgNum, imgNum, zipPercent = null) {
     if (!document.querySelector('#progress')) {
         let progress = document.createElement('div');
         progress.id = 'progress';
         progress.innerHTML = `
         <div id='page-progress' title="页面"></div>
         <div id='img-progress' title="图片"></div>
+        <div id='zip-progress' title="ZIP"></div>
         `
         let progressStyle = document.createElement('style');
         progressStyle.innerHTML = `
@@ -197,6 +211,19 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
             background-repeat: no-repeat;
             margin-top: 5px;
         }
+        #zip-progress{
+            --color:yellow;
+            --position:0%;
+            width:200px;
+            height:10px;
+            border-radius:30px;
+            background-color:#ccc;
+            background-image:radial-gradient(closest-side circle at var(--position),var(--color),var(--color) 100%,transparent),linear-gradient(var(--color),var(--color));
+            background-image:-webkit-radial-gradient(var(--position),circle closest-side,var(--color),var(--color) 100%,transparent),-webkit-linear-gradient(var(--color),var(--color));
+            background-size:100% ,var(--position);
+            background-repeat: no-repeat;
+            margin-top: 5px;
+        }
         `
         document.head.appendChild(progressStyle);
         document.body.appendChild(progress);
@@ -210,6 +237,12 @@ function updateProgress(finishNum, pageNum, finishImgNum, imgNum) {
         document.querySelector('#img-progress').style.cssText = `--position:${imgPercent};`;
     } else {
         document.querySelector('#img-progress').style.cssText = 'display:none;';
+    }
+
+    if (zipPercent) {
+        document.querySelector('#zip-progress').style.cssText = `--position:${zipPercent}%;`;
+    } else {
+        document.querySelector('#zip-progress').style.cssText = 'display:none;';
     }
 }
 
@@ -265,54 +298,91 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     if (charset === undefined) {
         if (CORS) {
             text = gfetch(url).then(
-                response => response.responseText,
+                response => {
+                    if (response.status >= 200 && response.status <= 299) {
+                        return response.responseText;
+                    } else {
+                        throw new Error("Bad response!");
+                    }
+                },
                 error => {
                     nowWorking--;
-                    errorCallback(error)
+                    errorCallback(error);
                 }
-            )
+            ).catch(error => {
+                nowWorking--;
+                errorCallback(error);
+            });
         } else {
             text = fetch(url).then(
-                response => response.text(),
+                response => {
+                    if (response.ok) {
+                        return response.text()
+                    } else {
+                        throw new Error("Bad response!");
+                    }
+                },
                 error => {
                     nowWorking--;
-                    errorCallback(error)
+                    errorCallback(error);
                 }
-            )
+            ).catch(error => {
+                nowWorking--;
+                errorCallback(error);
+            });
         }
     } else {
         if (CORS) {
             text = gfetch(url, { responseType: 'arraybuffer' }).then(
-                response => response.response,
-                response => response.arrayBuffer(),
+                response => {
+                    if (response.status >= 200 && response.status <= 299) {
+                        return response.response
+                    } else {
+                        throw new Error("Bad response!");
+                    }
+                },
                 error => {
                     nowWorking--;
-                    errorCallback(error)
+                    errorCallback(error);
                 }).then(
                 buffer => {
                     let decoder = new TextDecoder(charset);
                     let text = decoder.decode(buffer);
                     return text
-                })
+                }).catch(error => {
+                nowWorking--;
+                errorCallback(error);
+            });
         } else {
             text = fetch(url).then(
-                response => response.arrayBuffer(),
+                response => {
+                    if (response.ok) {
+                        response.arrayBuffer()
+                    } else {
+                        throw new Error("Bad response!");
+                    }
+                },
                 error => {
                     nowWorking--;
-                    errorCallback(error)
+                    errorCallback(error);
                 }).then(
                 buffer => {
                     let decoder = new TextDecoder(charset);
                     let text = decoder.decode(buffer);
                     return text
-                })
+                }).catch(error => {
+                nowWorking--;
+                errorCallback(error);
+            });
         }
     }
 
     text.then(text => {
-        nowWorking--;
-        extractData(id, url, text, rule, pageWorkerResolved)
-    }).catch(error => errorCallback(error))
+        if (text) {
+            nowWorking--;
+            extractData(id, url, text, rule, pageWorkerResolved);
+        }
+    }).catch(error => errorCallback(error));
 
     function errorCallback(error) {
         console.error(id, url, pageTask, error);
@@ -320,7 +390,7 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
         if (retry > maxRetryTimes) {
             pageWorkerRejected.set(id, url);
         } else {
-            pageTaskQueue.push({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
+            pageTaskQueue.unshift({ 'id': id, 'url': url, 'retry': retry, 'dom': dom });
         }
     }
 }

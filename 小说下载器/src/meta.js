@@ -17,6 +17,9 @@
 // @match       http://www.jjwxc.net/onebook.php?novelid=*
 // @exclude     http://www.jjwxc.net/onebook.php?novelid=*&chapterid=*
 // @match       http://book.sfacg.com/Novel/*/MainIndex/
+// @match       http://www.gebiqu.com/biquge_*/
+// @match       https://www.meegoq.com/book*.html
+// @exclude     https://www.meegoq.com/book/*.html
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -25,10 +28,13 @@
 // @connect     kuangxiangit.com
 // @connect     sinaimg.cn
 // @connect     jjwxc.net
+// @connect     image.gebiqu.com
+// @connect     qidian.qpic.cn
+// @connect     static.zongheng.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @run-at      document-end
-// @version     1.3.4.4
+// @version     1.3.6.9
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等其他网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues

@@ -18,11 +18,14 @@
 // @match       http://www.jjwxc.net/onebook.php?novelid=*
 // @exclude     http://www.jjwxc.net/onebook.php?novelid=*&chapterid=*
 // @match       http://book.sfacg.com/Novel/*/MainIndex/
+// @match       http://www.gebiqu.com/biquge_*/
+// @match       https://www.meegoq.com/book*.html
+// @exclude     https://www.meegoq.com/book/*.html
 // @grant       unsafeWindow
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     1.5.0
+// @version     1.8.1
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -41,6 +44,8 @@ const urls = new Map([
     ["www.ciweimao.com", "https://www.ciweimao.com/chapter-list/100169403/book_detail"],
     ["www.jjwxc.net", "http://www.jjwxc.net/onebook.php?novelid=1319256"],
     ["book.sfacg.com", "http://book.sfacg.com/Novel/326107/MainIndex/"],
+    ["www.gebiqu.com", "http://www.gebiqu.com/biquge_2181/"],
+    ["www.meegoq.com", "https://www.meegoq.com/book76557.html"],
 ])
 
 window.addEventListener('load', function() {

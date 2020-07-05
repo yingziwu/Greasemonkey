@@ -402,9 +402,72 @@ const rules = new Map([
         linkList() { return document.querySelectorAll('.catalog-list li a:not([href^="/vip"])') },
         coverUrl: async() => {
             const indexUrl = document.location.href.replace('/MainIndex/', '');
-            return (crossPage(indexUrl, "doc.querySelector('.summary-pic img').src"))
+            return (crossPage(indexUrl, "doc.querySelector('#hasTicket div.pic img').src"))
         },
         chapterName: function(doc) { return doc.querySelector('h1.article-title').innerText.trim() },
         content: function(doc) { return doc.querySelector('.article-content') },
+    }],
+    ["www.gebiqu.com", {
+        bookname() { return document.querySelector('#info > h1').innerText.trim() },
+        author() { return document.querySelector('#info > p:nth-child(2)').innerText.replace(/作\s+者：/, '').trim() },
+        intro() {
+            let intro = document.querySelector('#intro');
+            intro.innerHTML = intro.innerHTML.replace(/如果您喜欢.+，别忘记分享给朋友/, '');
+            rm('a[href^="http://down.gebiqu.com"]', false, intro);
+            return convertDomNode(intro)[0]
+        },
+        linkList() { return includeLatestChapter('#list > dl:nth-child(1)') },
+        coverUrl() { return document.querySelector('#fmimg > img').src },
+        chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
+        content: function(doc) {
+            let content = doc.querySelector('#content');
+            content.innerHTML = content.innerHTML.replace('www.gebiqu.com', '');
+            return content
+        },
+    }],
+    ['www.meegoq.com', {
+        bookname() { return document.querySelector('article.info > header > h1').innerText.replace(/最新章节$/, '').trim() },
+        author: async() => {
+            const indexUrl = document.location.href.replace('/book', '/info');
+            return (crossPage(indexUrl, "doc.querySelector('article.info > p.detail.pt20 > i:nth-child(1) > a').innerText.trim()"))
+        },
+        intro: async() => {
+            const indexUrl = document.location.href.replace('/book', '/info');
+            let f = () => {
+                let intro = doc.querySelector('article.info > p.desc');
+                rm('b', false, intro);
+                return convertDomNode(intro)[0];
+            };
+            return (crossPage(indexUrl, `(${f.toString()})()`))
+        },
+        linkList() {
+            let ul = document.querySelector('ul.mulu');
+            let rLi = ul.querySelector('li:nth-child(1)');
+            if (rLi.innerText.match(/最新.章/)) {
+                let p = null;
+                let n = rLi;
+                while (true) {
+                    if (n.nodeName == 'LI' && n.childElementCount !== 0) {
+                        p = n;
+                        n = n.nextSibling;
+                        p.classList.add('not_download')
+                    } else if (n.nodeName == 'LI' && n.childElementCount === 0 && !n.innerText.match(/最新.章/)) {
+                        break;
+                    } else {
+                        p = n;
+                        n = n.nextSibling;
+                    }
+                }
+            }
+            return ul.querySelectorAll('li:not(.not_download) > a');
+        },
+        coverUrl: async() => {
+            const indexUrl = document.location.href.replace('/book', '/info');
+            return (crossPage(indexUrl, "doc.querySelector('article.info > div.cover > img').src"))
+        },
+        chapterName: function(doc) { return doc.querySelector('article > header > h1').innerText.trim() },
+        content: function(doc) { return doc.querySelector('#content') },
+        maxConcurrency: 1,
+        maxRetryTimes: 5,
     }],
 ]);
