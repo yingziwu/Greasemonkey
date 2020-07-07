@@ -22,6 +22,7 @@
 // @exclude     https://www.meegoq.com/book/*.html
 // @match       http://book.zongheng.com/showchapter/*.html
 // @match       http://huayu.zongheng.com/showchapter/*.html
+// @match       https://www.17k.com/list/*.html
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -34,11 +35,12 @@
 // @connect     qidian.qpic.cn
 // @connect     static.zongheng.com
 // @connect     book.zongheng.com
+// @connect     cdn.static.17k.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.1.5
+// @version     2.0.2.7
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -3303,7 +3305,7 @@ let rules = new Map([["www.yruan.com", {
   },
 
   linkList() {
-    return document.querySelectorAll('.chapter-list li:not(.vip) a');
+    return document.querySelectorAll(".chapter-list li:not(.vip) a");
   },
 
   coverUrl: async () => {
@@ -3315,6 +3317,40 @@ let rules = new Map([["www.yruan.com", {
   },
   content: function content(doc) {
     return doc.querySelector("div.content");
+  }
+}], ["www.17k.com", {
+  bookname() {
+    return document.querySelector("h1.Title").innerText.trim();
+  },
+
+  author() {
+    return document.querySelector("div.Author > a").innerText.trim();
+  },
+
+  intro: async () => {
+    const indexUrl = document.location.href.replace("/list/", "/book/");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* crossPage */ "a"])(indexUrl, "convertDomNode(doc.querySelector('#bookInfo p.intro > a'))[0]");
+  },
+
+  linkList() {
+    document.querySelectorAll("dl.Volume > dd > a > span.vip").forEach(span => span.parentElement.classList.add("not_download"));
+    return document.querySelectorAll("dl.Volume > dd > a:not(.not_download)");
+  },
+
+  coverUrl: async () => {
+    const indexUrl = document.location.href.replace("/list/", "/book/");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('#bookCover img.book').src.replace('http://','https://')");
+  },
+  chapterName: function chapterName(doc) {
+    return doc.querySelector("#readArea > div.readAreaBox.content > h1").innerText.trim();
+  },
+  content: function content(doc) {
+    let content = doc.querySelector("#readArea > div.readAreaBox.content > div.p");
+    Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* rm */ "d"])('p.copy', false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* rm */ "d"])('#banner_content', false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* rm */ "d"])('div.qrcode', false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* rm */ "d"])('div.chapter_text_ad', false, content);
+    return content;
   }
 }]]);
 [{

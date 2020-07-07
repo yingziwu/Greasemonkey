@@ -22,6 +22,7 @@
 // @exclude     https://www.meegoq.com/book/*.html
 // @match       http://book.zongheng.com/showchapter/*.html
 // @match       http://huayu.zongheng.com/showchapter/*.html
+// @match       https://www.17k.com/list/*.html
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -34,11 +35,12 @@
 // @connect     qidian.qpic.cn
 // @connect     static.zongheng.com
 // @connect     book.zongheng.com
+// @connect     cdn.static.17k.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.1.5
+// @version     2.0.2.7
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues

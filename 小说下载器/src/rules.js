@@ -568,13 +568,38 @@ let rules = new Map([
       const indexUrl = document.location.href.replace("/showchapter/", "/book/");
       return crossPage(indexUrl, "convertDomNode(doc.querySelector('div.book-info > div.book-dec'))[0]");
     },
-    linkList() { return document.querySelectorAll('.chapter-list li:not(.vip) a'); },
+    linkList() { return document.querySelectorAll(".chapter-list li:not(.vip) a"); },
     coverUrl: async () => {
       const indexUrl = document.location.href.replace("/showchapter/", "/book/");
       return crossPage(indexUrl, "doc.querySelector('div.book-img > img').src");
     },
     chapterName: function (doc) { return doc.querySelector("div.title_txtbox").innerText.trim(); },
     content: function (doc) { return doc.querySelector("div.content"); }
+  }],
+  ["www.17k.com", {
+    bookname() { return document.querySelector("h1.Title").innerText.trim(); },
+    author() { return document.querySelector("div.Author > a").innerText.trim(); },
+    intro: async () => {
+      const indexUrl = document.location.href.replace("/list/", "/book/");
+      return crossPage(indexUrl, "convertDomNode(doc.querySelector('#bookInfo p.intro > a'))[0]");
+    },
+    linkList() {
+      document.querySelectorAll("dl.Volume > dd > a > span.vip").forEach(span => span.parentElement.classList.add("not_download"));
+      return document.querySelectorAll("dl.Volume > dd > a:not(.not_download)");
+    },
+    coverUrl: async () => {
+      const indexUrl = document.location.href.replace("/list/", "/book/");
+      return crossPage(indexUrl, "doc.querySelector('#bookCover img.book').src.replace('http://','https://')");
+    },
+    chapterName: function (doc) { return doc.querySelector("#readArea > div.readAreaBox.content > h1").innerText.trim(); },
+    content: function (doc) {
+      let content = doc.querySelector("#readArea > div.readAreaBox.content > div.p");
+      rm('p.copy', false, content);
+      rm('#banner_content', false, content);
+      rm('div.qrcode', false, content);
+      rm('div.chapter_text_ad', false, content);
+      return content;
+    }
   }]
 ]);
 
