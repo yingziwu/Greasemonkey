@@ -21,11 +21,13 @@
 // @match       http://www.gebiqu.com/biquge_*/
 // @match       https://www.meegoq.com/book*.html
 // @exclude     https://www.meegoq.com/book/*.html
+// @match       http://book.zongheng.com/showchapter/*.html
+// @match       http://huayu.zongheng.com/showchapter/*.html
 // @grant       unsafeWindow
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     1.8.2
+// @version     1.8.3
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -52,6 +54,8 @@ const urls = new Map([
   ["book.sfacg.com", "http://book.sfacg.com/Novel/326107/MainIndex/"],
   ["www.gebiqu.com", "http://www.gebiqu.com/biquge_2181/"],
   ["www.meegoq.com", "https://www.meegoq.com/book76557.html"],
+  ["book.zongheng.com", "http://book.zongheng.com/showchapter/866183.html"],
+  ["huayu.zongheng.com", "http://huayu.zongheng.com/showchapter/835758.html"],
 ]);
 
 window.addEventListener("load", function () {

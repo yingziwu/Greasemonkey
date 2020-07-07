@@ -2,7 +2,7 @@
 import { crossPage, gfetch, includeLatestChapter, rm, sleep } from "./lib";
 import { convertDomNode } from "./main";
 
-const rules = new Map([
+let rules = new Map([
   ["www.yruan.com", {
     bookname() { return document.querySelector("#info > h1:nth-child(1)").innerText.trim(); },
     author() { return document.querySelector("#info > p:nth-child(2)").innerText.replace(/作\s+者:/, "").trim(); },
@@ -560,8 +560,38 @@ const rules = new Map([
     },
     maxConcurrency: 1,
     maxRetryTimes: 5
+  }],
+  ["book.zongheng.com", {
+    bookname() { return document.querySelector("div.book-meta > h1").innerText.trim(); },
+    author() { return document.querySelector("div.book-meta > p > span:nth-child(1) > a").innerText.trim(); },
+    intro: async () => {
+      const indexUrl = document.location.href.replace("/showchapter/", "/book/");
+      return crossPage(indexUrl, "convertDomNode(doc.querySelector('div.book-info > div.book-dec'))[0]");
+    },
+    linkList() { return document.querySelectorAll('.chapter-list li:not(.vip) a'); },
+    coverUrl: async () => {
+      const indexUrl = document.location.href.replace("/showchapter/", "/book/");
+      return crossPage(indexUrl, "doc.querySelector('div.book-img > img').src");
+    },
+    chapterName: function (doc) { return doc.querySelector("div.title_txtbox").innerText.trim(); },
+    content: function (doc) { return doc.querySelector("div.content"); }
   }]
 ]);
 
+[
+  { "mainHost": "book.zongheng.com", "alias": ["huayu.zongheng.com"], "modify": { CORS: true } }
+].forEach(entry => {
+  const aliases = entry.alias;
+  let mainRule = rules.get(entry.mainHost);
+  let modify = entry.modify;
+  for (let key in modify) {
+    if (Object.prototype.hasOwnProperty.call(modify, key)) {
+      mainRule[key] = modify[key];
+    }
+  }
+  for (let alias of aliases) {
+    rules.set(alias, mainRule);
+  }
+});
 
 export { rules };

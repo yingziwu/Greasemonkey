@@ -20,6 +20,8 @@
 // @match       http://www.gebiqu.com/biquge_*/
 // @match       https://www.meegoq.com/book*.html
 // @exclude     https://www.meegoq.com/book/*.html
+// @match       http://book.zongheng.com/showchapter/*.html
+// @match       http://huayu.zongheng.com/showchapter/*.html
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -31,11 +33,12 @@
 // @connect     image.gebiqu.com
 // @connect     qidian.qpic.cn
 // @connect     static.zongheng.com
+// @connect     book.zongheng.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.0.5
+// @version     2.0.1.5
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -2536,7 +2539,7 @@ __webpack_require__(36)('replace', 2, function (defined, REPLACE, $replace, mayb
 /* eslint-disable no-eval */
 
 
-const rules = new Map([["www.yruan.com", {
+let rules = new Map([["www.yruan.com", {
   bookname() {
     return document.querySelector("#info > h1:nth-child(1)").innerText.trim();
   },
@@ -3285,7 +3288,56 @@ const rules = new Map([["www.yruan.com", {
   },
   maxConcurrency: 1,
   maxRetryTimes: 5
+}], ["book.zongheng.com", {
+  bookname() {
+    return document.querySelector("div.book-meta > h1").innerText.trim();
+  },
+
+  author() {
+    return document.querySelector("div.book-meta > p > span:nth-child(1) > a").innerText.trim();
+  },
+
+  intro: async () => {
+    const indexUrl = document.location.href.replace("/showchapter/", "/book/");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* crossPage */ "a"])(indexUrl, "convertDomNode(doc.querySelector('div.book-info > div.book-dec'))[0]");
+  },
+
+  linkList() {
+    return document.querySelectorAll('.chapter-list li:not(.vip) a');
+  },
+
+  coverUrl: async () => {
+    const indexUrl = document.location.href.replace("/showchapter/", "/book/");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('div.book-img > img').src");
+  },
+  chapterName: function chapterName(doc) {
+    return doc.querySelector("div.title_txtbox").innerText.trim();
+  },
+  content: function content(doc) {
+    return doc.querySelector("div.content");
+  }
 }]]);
+[{
+  "mainHost": "book.zongheng.com",
+  "alias": ["huayu.zongheng.com"],
+  "modify": {
+    CORS: true
+  }
+}].forEach(entry => {
+  const aliases = entry.alias;
+  let mainRule = rules.get(entry.mainHost);
+  let modify = entry.modify;
+
+  for (let key in modify) {
+    if (Object.prototype.hasOwnProperty.call(modify, key)) {
+      mainRule[key] = modify[key];
+    }
+  }
+
+  for (let alias of aliases) {
+    rules.set(alias, mainRule);
+  }
+});
 
 
 /***/ }),
