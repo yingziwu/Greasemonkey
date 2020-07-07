@@ -24,11 +24,13 @@
 // @match       http://book.zongheng.com/showchapter/*.html
 // @match       http://huayu.zongheng.com/showchapter/*.html
 // @match       https://www.17k.com/list/*.html
+// @match       http://www.shuhai.com/book/*.htm
+// @match       http://mm.shuhai.com/book/*.htm
 // @grant       unsafeWindow
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     1.8.4
+// @version     1.9.0
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -58,6 +60,8 @@ const urls = new Map([
   ["book.zongheng.com", "http://book.zongheng.com/showchapter/866183.html"],
   ["huayu.zongheng.com", "http://huayu.zongheng.com/showchapter/835758.html"],
   ["www.17k.com", "https://www.17k.com/list/3049463.html"],
+  ["www.shuhai.com", "http://www.shuhai.com/book/58361.htm"],
+  ["mm.shuhai.com", "http://mm.shuhai.com/book/59167.htm"],
 ]);
 
 window.addEventListener("load", function () {

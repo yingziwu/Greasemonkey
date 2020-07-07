@@ -23,6 +23,8 @@
 // @match       http://book.zongheng.com/showchapter/*.html
 // @match       http://huayu.zongheng.com/showchapter/*.html
 // @match       https://www.17k.com/list/*.html
+// @match       http://www.shuhai.com/book/*.htm
+// @match       http://mm.shuhai.com/book/*.htm
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -36,11 +38,12 @@
 // @connect     static.zongheng.com
 // @connect     book.zongheng.com
 // @connect     cdn.static.17k.com
+// @connect     www.shuhai.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.2.7
+// @version     2.0.3.2
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -2952,26 +2955,21 @@ let rules = new Map([["www.yruan.com", {
   },
 
   linkList: async () => {
+    const getLiLength = () => document.querySelectorAll("#j-catalogWrap li").length;
+
+    const getlinkList = () => document.querySelectorAll('.volume-wrap ul.cf li a:not([href^="//vipreader"]');
+
     return new Promise((resolve, reject) => {
-      let list;
-
-      const getLiLength = () => document.querySelectorAll("#j-catalogWrap li").length;
-
-      const getlinkList = () => document.querySelectorAll('.volume-wrap ul.cf li a:not([href^="//vipreader"]');
-
       if (getLiLength() !== 0) {
-        list = getlinkList();
+        resolve(getlinkList());
+      } else {
         setTimeout(() => {
           if (getLiLength() !== 0) {
-            list = getlinkList();
-            resolve(list);
+            resolve(getlinkList());
           } else {
             reject(new Error("Can't found linkList."));
           }
         }, 3000);
-      } else {
-        list = getlinkList();
-        resolve(list);
       }
     });
   },
@@ -3352,10 +3350,63 @@ let rules = new Map([["www.yruan.com", {
     Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* rm */ "d"])('div.chapter_text_ad', false, content);
     return content;
   }
+}], ["www.shuhai.com", {
+  bookname() {
+    return document.querySelector("div.book-info-bookname > span:nth-child(1)").innerText.trim();
+  },
+
+  author() {
+    return document.querySelector("div.book-info-bookname > span:nth-child(2)").innerText.replace("作者: ", "").trim();
+  },
+
+  intro() {
+    let intro = document.querySelector("div.book-info-bookintro") || document.querySelector("div.book-info-bookintro-all");
+    return Object(_main__WEBPACK_IMPORTED_MODULE_6__[/* convertDomNode */ "a"])(intro)[0];
+  },
+
+  linkList: async () => {
+    const getLinkList = () => {
+      document.querySelectorAll("#muluid div.chapter-item > span.vip").forEach(span => span.parentElement.classList.add("not_download"));
+      return document.querySelectorAll("#muluid div.chapter-item:not(.not_download) > a");
+    };
+
+    return new Promise((resolve, reject) => {
+      if (getLinkList().length !== 0) {
+        resolve(getLinkList());
+      } else {
+        setTimeout(() => {
+          if (getLinkList().length !== 0) {
+            resolve(getLinkList());
+          } else {
+            reject(new Error("Can't found linkList."));
+          }
+        }, 3000);
+      }
+    });
+  },
+
+  coverUrl() {
+    return document.querySelector(".book-cover-wrapper > img").getAttribute("data-original");
+  },
+
+  chapterName: function chapterName(doc) {
+    return doc.querySelector("div.chapter-name").innerText.replace("正文 ", "").trim();
+  },
+  content: function content(doc) {
+    let content = doc.querySelector("#reader-content > div:nth-child(1)");
+    Object(_lib__WEBPACK_IMPORTED_MODULE_5__[/* rm */ "d"])("div.chaper-info", false, content);
+    return content;
+  }
 }]]);
 [{
   "mainHost": "book.zongheng.com",
   "alias": ["huayu.zongheng.com"],
+  "modify": {
+    CORS: true
+  }
+}, {
+  "mainHost": "www.shuhai.com",
+  "alias": ["mm.shuhai.com"],
   "modify": {
     CORS: true
   }

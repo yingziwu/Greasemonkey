@@ -273,26 +273,19 @@ let rules = new Map([
     author() { return document.querySelector(".book-info .writer").innerText.replace(/作\s+者:/, "").trim(); },
     intro() { return convertDomNode(document.querySelector(".book-info-detail .book-intro"))[0]; },
     linkList: async () => {
+      const getLiLength = () => document.querySelectorAll("#j-catalogWrap li").length;
+      const getlinkList = () => document.querySelectorAll('.volume-wrap ul.cf li a:not([href^="//vipreader"]');
       return new Promise((resolve, reject) => {
-        let list;
-
-        const getLiLength = () => document.querySelectorAll("#j-catalogWrap li").length;
-
-        const getlinkList = () => document.querySelectorAll('.volume-wrap ul.cf li a:not([href^="//vipreader"]');
-
         if (getLiLength() !== 0) {
-          list = getlinkList();
+          resolve(getlinkList());
+        } else {
           setTimeout(() => {
             if (getLiLength() !== 0) {
-              list = getlinkList();
-              resolve(list);
+              resolve(getlinkList());
             } else {
               reject(new Error("Can't found linkList."));
             }
           }, 3000);
-        } else {
-          list = getlinkList();
-          resolve(list);
         }
       });
     },
@@ -600,11 +593,49 @@ let rules = new Map([
       rm('div.chapter_text_ad', false, content);
       return content;
     }
+  }],
+  ["www.shuhai.com", {
+    bookname() { return document.querySelector("div.book-info-bookname > span:nth-child(1)").innerText.trim(); },
+    author() { return document.querySelector("div.book-info-bookname > span:nth-child(2)").innerText.replace("作者: ", "").trim(); },
+    intro() {
+      let intro = document.querySelector("div.book-info-bookintro") || document.querySelector("div.book-info-bookintro-all");
+      return convertDomNode(intro)[0];
+    },
+    linkList: async () => {
+      const getLinkList = () => {
+        document.querySelectorAll("#muluid div.chapter-item > span.vip")
+          .forEach(span => span.parentElement.classList.add("not_download"));
+        return document.querySelectorAll("#muluid div.chapter-item:not(.not_download) > a");
+      }
+      return new Promise((resolve, reject) => {
+        if (getLinkList().length !== 0) {
+          resolve(getLinkList());
+        } else {
+          setTimeout(() => {
+            if (getLinkList().length !== 0) {
+              resolve(getLinkList());
+            } else {
+              reject(new Error("Can't found linkList."));
+            }
+          }, 3000);
+        }
+      });
+    },
+    coverUrl() { return document.querySelector(".book-cover-wrapper > img").getAttribute("data-original"); },
+    chapterName: function (doc) {
+      return doc.querySelector("div.chapter-name").innerText.replace("正文 ", "").trim();
+    },
+    content: function (doc) {
+      let content = doc.querySelector("#reader-content > div:nth-child(1)");
+      rm("div.chaper-info", false, content);
+      return content;
+    }
   }]
 ]);
 
 [
-  { "mainHost": "book.zongheng.com", "alias": ["huayu.zongheng.com"], "modify": { CORS: true } }
+  { "mainHost": "book.zongheng.com", "alias": ["huayu.zongheng.com"], "modify": { CORS: true } },
+  { "mainHost": "www.shuhai.com", "alias": ["mm.shuhai.com"], "modify": { CORS: true } },
 ].forEach(entry => {
   const aliases = entry.alias;
   let mainRule = rules.get(entry.mainHost);
