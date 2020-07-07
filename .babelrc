@@ -10,8 +10,8 @@
           "chrome": "67",
           "safari": "11.1"
         },
-        "useBuiltIns": "usage",
-        "corejs": { "version": 2, "proposals": true }
+        "useBuiltIns": "entry",
+        "corejs": { "version": 3.6, "proposals": true }
       }
     ]
   ]
