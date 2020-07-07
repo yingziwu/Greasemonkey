@@ -1,4 +1,4 @@
-"use strict";
+
 
 /*  本下载器可添加抓取规则以支持更多网站
 
@@ -12,7 +12,7 @@
         chapterName: function(doc) { return doc.querySelector('.bookname > h1:nth-child(1)').innerText.trim() },
         content: function(doc) { return doc.querySelector('#content') },
     }],
-    
+
     抓取规则的 `key` 为该抓取规则适用的网站域名，即 `document.location.host`。
 
     抓取规则的 `value` 一对象，该对象由7个函数组成：
@@ -46,7 +46,7 @@
 
     调试功能：
     将 `enableDebug` 变量改为 `true` 可开启调试功能，开启之后可在控制台（console）中访问如下对象：
-    
+
     对象名	                    类型	  功能
     rule                        变量    当前抓取规则
     main(rule)                  函数    运行下载器

@@ -25,7 +25,7 @@
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     1.8.1
+// @version     1.8.2
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -48,10 +48,10 @@ const urls = new Map([
     ["www.meegoq.com", "https://www.meegoq.com/book76557.html"],
 ])
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     const host = document.location.host;
 
-    if (host == "greasyfork.org") {
+    if (host === "greasyfork.org") {
         GM_registerMenuCommand('Start Rule test', openTab)
     } else if (urls.has(host)) {
         setTimeout(run, 1500 + 3000 * Math.random());
