@@ -35,7 +35,7 @@
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.0.4
+// @version     2.0.0.5
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues

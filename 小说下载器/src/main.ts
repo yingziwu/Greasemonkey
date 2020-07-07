@@ -12,7 +12,7 @@ import {
   maxImgConcurrency,
   icon0,
   icon1,
-} from "./rules";
+} from "./setting";
 
 let nowWorking = 0;
 const nowWorkingInc = () => nowWorking++;

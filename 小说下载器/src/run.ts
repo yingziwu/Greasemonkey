@@ -1,4 +1,4 @@
-import { enableDebug, rule, maxConcurrency, icon0, icon1 } from "./rules";
+import { enableDebug, rule, maxConcurrency, icon0, icon1 } from "./setting";
 import {
   downloading,
   setDownloadingTrue,

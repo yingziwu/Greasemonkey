@@ -1,5 +1,3 @@
-
-
 /*  本下载器可添加抓取规则以支持更多网站
 
     抓取规则示例：
@@ -80,5 +78,4 @@
     response            the response data as object if details.responseType was set
     responseXML         the response data as XML document
     responseText        the response data as plain string
-
 */

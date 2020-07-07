@@ -31,57 +31,62 @@
 // ==/UserScript==
 
 const urls = new Map([
-    ["www.yruan.com", "http://www.yruan.com/article/27603.html"],
-    ["www.jingcaiyuedu.com", "https://www.jingcaiyuedu.com/novel/uVsXR/list.html"],
-    ["www.shuquge.com", "http://www.shuquge.com/txt/78708/index.html"],
-    ["www.dingdiann.com", "https://www.dingdiann.com/ddk253007/"],
-    ["www.fpzw.com", "https://www.fpzw.com/xiaoshuo/51/51578/"],
-    ["www.hetushu.com", "https://www.hetushu.com/book/5/index.html"],
-    ["www.biquwo.org", "http://www.biquwo.org/bqw51059/"],
-    ["www.xkzw.org", "http://www.xkzw.org/xkzw66086/"],
-    ["www.shouda8.com", "http://www.shouda8.com/11342/"],
-    ["book.qidian.com", "https://book.qidian.com/info/1010939791"],
-    ["www.ciweimao.com", "https://www.ciweimao.com/chapter-list/100169403/book_detail"],
-    ["www.jjwxc.net", "http://www.jjwxc.net/onebook.php?novelid=1319256"],
-    ["book.sfacg.com", "http://book.sfacg.com/Novel/326107/MainIndex/"],
-    ["www.gebiqu.com", "http://www.gebiqu.com/biquge_2181/"],
-    ["www.meegoq.com", "https://www.meegoq.com/book76557.html"],
-])
+  ["www.yruan.com", "http://www.yruan.com/article/27603.html"],
+  [
+    "www.jingcaiyuedu.com",
+    "https://www.jingcaiyuedu.com/novel/uVsXR/list.html",
+  ],
+  ["www.shuquge.com", "http://www.shuquge.com/txt/78708/index.html"],
+  ["www.dingdiann.com", "https://www.dingdiann.com/ddk253007/"],
+  ["www.fpzw.com", "https://www.fpzw.com/xiaoshuo/51/51578/"],
+  ["www.hetushu.com", "https://www.hetushu.com/book/5/index.html"],
+  ["www.biquwo.org", "http://www.biquwo.org/bqw51059/"],
+  ["www.xkzw.org", "http://www.xkzw.org/xkzw66086/"],
+  ["www.shouda8.com", "http://www.shouda8.com/11342/"],
+  ["book.qidian.com", "https://book.qidian.com/info/1010939791"],
+  [
+    "www.ciweimao.com",
+    "https://www.ciweimao.com/chapter-list/100169403/book_detail",
+  ],
+  ["www.jjwxc.net", "http://www.jjwxc.net/onebook.php?novelid=1319256"],
+  ["book.sfacg.com", "http://book.sfacg.com/Novel/326107/MainIndex/"],
+  ["www.gebiqu.com", "http://www.gebiqu.com/biquge_2181/"],
+  ["www.meegoq.com", "https://www.meegoq.com/book76557.html"],
+]);
 
-window.addEventListener('load', function () {
-    const host = document.location.host;
+window.addEventListener("load", function () {
+  const host = document.location.host;
 
-    if (host === "greasyfork.org") {
-        GM_registerMenuCommand('Start Rule test', openTab)
-    } else if (urls.has(host)) {
-        setTimeout(run, 1500 + 3000 * Math.random());
-    }
-})
+  if (host === "greasyfork.org") {
+    GM_registerMenuCommand("Start Rule test", openTab);
+  } else if (urls.has(host)) {
+    setTimeout(run, 1500 + 3000 * Math.random());
+  }
+});
 
 function run() {
-    console.log('Start ruleTest……')
-    const rule = unsafeWindow.rule;
-    const main = unsafeWindow.main;
-    const ruleTest = unsafeWindow.ruleTest;
+  console.log("Start ruleTest……");
+  const rule = unsafeWindow.rule;
+  const main = unsafeWindow.main;
+  const ruleTest = unsafeWindow.ruleTest;
 
-    const linkList = rule.linkList();
-    ruleTest(rule, testCallback)
+  const linkList = rule.linkList();
+  ruleTest(rule, testCallback);
 }
 
-
 function openTab() {
-    for (let url of urls.values()) {
-        console.log(url);
-        if (Array.isArray(url)) {
-            url.forEach(u => GM_openInTab(u));
-        } else {
-            GM_openInTab(url);
-        }
+  for (let url of urls.values()) {
+    console.log(url);
+    if (Array.isArray(url)) {
+      url.forEach((u) => GM_openInTab(u));
+    } else {
+      GM_openInTab(url);
     }
+  }
 }
 
 function testCallback(obj) {
-    document.body.innerHTML = `
+  document.body.innerHTML = `
     <div><p><img src="${obj.coverImg.src}" /></p></div>
     <div><pre>${obj.infoText}</pre></div>
     <div><br/></div>
@@ -95,11 +100,11 @@ function testCallback(obj) {
     <hr/>
     <h2>${obj.pageObj.chapterName}</h2>
     <div>${obj.pageObj.dom.innerHTML}</div>
-    `
-    let l = document.querySelector('#linkList');
-    for (let link of obj.linkList) {
-        let li = document.createElement('li');
-        li.innerHTML = link.outerHTML;
-        l.appendChild(li);
-    }
+    `;
+  let l = document.querySelector("#linkList");
+  for (let link of obj.linkList) {
+    let li = document.createElement("li");
+    li.innerHTML = link.outerHTML;
+    l.appendChild(li);
+  }
 }

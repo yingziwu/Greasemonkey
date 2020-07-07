@@ -1,13 +1,13 @@
-(function() {
-    let div
-    if (document.querySelector('#test')) {
-        div = document.querySelector('#test');
-    } else {
-        div = document.createElement('div');
-        div.id = 'test';
-        document.body.append(div);
-    }
-    div.innerHTML = `<p>测试ygyy本<br>
+(function () {
+  let div;
+  if (document.querySelector("#test")) {
+    div = document.querySelector("#test");
+  } else {
+    div = document.createElement("div");
+    div.id = "test";
+    document.body.append(div);
+  }
+  div.innerHTML = `<p>测试ygyy本<br>
   新的文本
   <span>span</span>
   之后
@@ -15,10 +15,10 @@
     就是这样
     测试一                                    下看看
   </p>
-    又是一行`
+    又是一行`;
 
-    let t, h;
-    [t, h] = convertDomNode(document.querySelector('#test'));
-    console.log(t);
-    console.log(h.innerHTML);
-})()
+  let t, h;
+  [t, h] = convertDomNode(document.querySelector("#test"));
+  console.log(t);
+  console.log(h.innerHTML);
+})();
