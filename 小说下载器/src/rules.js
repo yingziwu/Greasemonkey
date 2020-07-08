@@ -696,8 +696,47 @@ let rules = new Map([
     coverUrl() { return document.querySelector("#fmimg > img").src; },
     chapterName: function (doc) { return doc.querySelector(".bookname > h1:nth-child(1)").innerText.trim(); },
     content: function (doc) { return doc.querySelector("#content"); }
+  }],
+  ["www.uukanshu.com", {
+    bookname() { return document.querySelector("dd.jieshao_content > h1 > a").innerText.replace("最新章节", "").trim(); },
+    author() { return document.querySelector("dd.jieshao_content > h2 > a").innerText.trim(); },
+    intro() {
+      let intro = document.querySelector("dd.jieshao_content > h3");
+      intro.innerHTML = intro.innerHTML.replace(/^.+简介：\s+www.uukanshu.com\s+/, "").replace(/\s+https:\/\/www.uukanshu.com/, "").replace(/－+/, "")
+      return convertDomNode(intro)[0];
+    },
+    linkList() {
+      let button = document.querySelector('span[onclick="javascript:reverse(this);"]');
+      const reverse = unsafeWindow.reverse;
+      if (button.innerText === "顺序排列") {
+        reverse(button);
+      }
+      return document.querySelectorAll("#chapterList li > a");
+    },
+    coverUrl() { return document.querySelector("a.bookImg > img").src; },
+    chapterName: function (doc) { return doc.querySelector("#timu").innerText.trim(); },
+    content: function (doc) {
+      let content = doc.querySelector("#contentbox");
+      rm(".ad_content", true, content);
+      let contentReplace = [
+        /[ＵｕUu]+看书\s*[wｗ]+.[ＵｕUu]+[kｋ][aａ][nｎ][ｓs][hｈ][ＵｕUu].[nｎ][eｅ][tｔ]/g,
+        /[ＵｕUu]+看书\s*[wｗ]+.[ＵｕUu]+[kｋ][aａ][nｎ][ｓs][hｈ][ＵｕUu].[cＣｃ][oＯｏ][mＭｍ]/g,
+        /[UＵ]*看书[（\\(].*?[）\\)]文字首发。/,
+        "请记住本书首发域名：。",
+        "笔趣阁手机版阅读网址：",
+        "小说网手机版阅读网址：",
+        "https://",
+        "http://",
+      ];
+      for (let r of contentReplace) {
+        content.innerHTML = content.innerHTML.replace(r, "");
+      }
+      return content;
+    },
+    charset: "GBK"
   }]
 ]);
+
 
 [
   { "mainHost": "book.zongheng.com", "alias": ["huayu.zongheng.com"], "modify": { CORS: true } },

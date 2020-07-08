@@ -27,6 +27,7 @@
 // @match       http://mm.shuhai.com/book/*.htm
 // @match       http://bianshenbaihe.szalsaf.com/txt/*/index.html
 // @match       https://www.biquge.tw/*/
+// @match       https://www.uukanshu.com/b/*/
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -41,11 +42,12 @@
 // @connect     book.zongheng.com
 // @connect     cdn.static.17k.com
 // @connect     www.shuhai.com
+// @connect     img.uukanshu.com
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.5.0
+// @version     2.0.6.4
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -2056,6 +2058,51 @@ let rules = new Map([["www.yruan.com", {
   content: function content(doc) {
     return doc.querySelector("#content");
   }
+}], ["www.uukanshu.com", {
+  bookname() {
+    return document.querySelector("dd.jieshao_content > h1 > a").innerText.replace("最新章节", "").trim();
+  },
+
+  author() {
+    return document.querySelector("dd.jieshao_content > h2 > a").innerText.trim();
+  },
+
+  intro() {
+    let intro = document.querySelector("dd.jieshao_content > h3");
+    intro.innerHTML = intro.innerHTML.replace(/^.+简介：\s+www.uukanshu.com\s+/, "").replace(/\s+https:\/\/www.uukanshu.com/, "").replace(/－+/, "");
+    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(intro)[0];
+  },
+
+  linkList() {
+    let button = document.querySelector('span[onclick="javascript:reverse(this);"]');
+    const reverse = unsafeWindow.reverse;
+
+    if (button.innerText === "顺序排列") {
+      reverse(button);
+    }
+
+    return document.querySelectorAll("#chapterList li > a");
+  },
+
+  coverUrl() {
+    return document.querySelector("a.bookImg > img").src;
+  },
+
+  chapterName: function chapterName(doc) {
+    return doc.querySelector("#timu").innerText.trim();
+  },
+  content: function content(doc) {
+    let content = doc.querySelector("#contentbox");
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])(".ad_content", true, content);
+    let contentReplace = [/[ＵｕUu]+看书\s*[wｗ]+.[ＵｕUu]+[kｋ][aａ][nｎ][ｓs][hｈ][ＵｕUu].[nｎ][eｅ][tｔ]/g, /[ＵｕUu]+看书\s*[wｗ]+.[ＵｕUu]+[kｋ][aａ][nｎ][ｓs][hｈ][ＵｕUu].[cＣｃ][oＯｏ][mＭｍ]/g, /[UＵ]*看书[（\\(].*?[）\\)]文字首发。/, "请记住本书首发域名：。", "笔趣阁手机版阅读网址：", "小说网手机版阅读网址：", "https://", "http://"];
+
+    for (let r of contentReplace) {
+      content.innerHTML = content.innerHTML.replace(r, "");
+    }
+
+    return content;
+  },
+  charset: "GBK"
 }]]);
 [{
   "mainHost": "book.zongheng.com",

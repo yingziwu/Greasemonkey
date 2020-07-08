@@ -28,11 +28,12 @@
 // @match       http://mm.shuhai.com/book/*.htm
 // @match       http://bianshenbaihe.szalsaf.com/txt/*/index.html
 // @match       https://www.biquge.tw/*/
+// @match       https://www.uukanshu.com/b/*/
 // @grant       unsafeWindow
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     2.0.1
+// @version     2.0.2
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -66,6 +67,7 @@ const urls = new Map([
   ["mm.shuhai.com", "http://mm.shuhai.com/book/59167.htm"],
   ["bianshenbaihe.szalsaf.com", "http://bianshenbaihe.szalsaf.com/txt/0/47/index.html"],
   ["www.biquge.tw", "https://www.biquge.tw/9_9376/"],
+  ["www.uukanshu.com", "https://www.uukanshu.com/b/83895/"],
 ]);
 
 window.addEventListener("load", function () {
