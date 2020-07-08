@@ -26,11 +26,12 @@
 // @match       https://www.17k.com/list/*.html
 // @match       http://www.shuhai.com/book/*.htm
 // @match       http://mm.shuhai.com/book/*.htm
+// @match       http://bianshenbaihe.szalsaf.com/txt/*/index.html
 // @grant       unsafeWindow
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     1.9.0
+// @version     1.10.0
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -62,6 +63,7 @@ const urls = new Map([
   ["www.17k.com", "https://www.17k.com/list/3049463.html"],
   ["www.shuhai.com", "http://www.shuhai.com/book/58361.htm"],
   ["mm.shuhai.com", "http://mm.shuhai.com/book/59167.htm"],
+  ["bianshenbaihe.szalsaf.com", "http://bianshenbaihe.szalsaf.com/txt/0/47/index.html"],
 ]);
 
 window.addEventListener("load", function () {
@@ -80,8 +82,9 @@ function run() {
   const main = unsafeWindow.main;
   const ruleTest = unsafeWindow.ruleTest;
 
-  const linkList = rule.linkList();
-  ruleTest(rule, testCallback);
+  if (rule) {
+    ruleTest(rule, testCallback);
+  }
 }
 
 function openTab() {
@@ -97,6 +100,52 @@ function openTab() {
 
 function testCallback(obj) {
   document.body.innerHTML = `
+  <style type="text/css">
+  body {
+      background-color: #f0f0f2;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  div.main {
+      width: 600px;
+      margin: 5em auto;
+      padding: 2em;
+      background-color: #fdfdff;
+      border-radius: 0.5em;
+      box-shadow: 2px 3px 7px 2px rgba(0,0,0,0.02);
+  }
+  a:link, a:visited {
+      color: #38488f;
+      text-decoration: none;
+  }
+  h2 {
+    line-height: 130%;
+    text-align: center;
+    font-weight: bold;
+    font-size: x-large;
+    margin-top: 0.2em;
+    margin-bottom: 0.3em;
+  }
+  p {
+    text-indent: 2em;
+    display: block;
+    line-height: 1.3em;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  @media (max-width: 700px) {
+      div.main {
+          margin: 0 auto;
+          width: auto;
+      }
+  }
+  </style>
+  <div class="main">
     <div><p><img src="${obj.coverImg.src}" /></p></div>
     <div><pre>${obj.infoText}</pre></div>
     <div><br/></div>
@@ -110,6 +159,7 @@ function testCallback(obj) {
     <hr/>
     <h2>${obj.pageObj.chapterName}</h2>
     <div>${obj.pageObj.dom.innerHTML}</div>
+  </div>
     `;
   let l = document.querySelector("#linkList");
   for (let link of obj.linkList) {

@@ -25,6 +25,7 @@
 // @match       https://www.17k.com/list/*.html
 // @match       http://www.shuhai.com/book/*.htm
 // @match       http://mm.shuhai.com/book/*.htm
+// @match       http://bianshenbaihe.szalsaf.com/txt/*/index.html
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -43,7 +44,7 @@
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.3.3
+// @version     2.0.4.8
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -1952,6 +1953,81 @@ let rules = new Map([["www.yruan.com", {
     Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("div.chaper-info", false, content);
     return content;
   }
+}], ["bianshenbaihe.szalsaf.com", {
+  bookname() {
+    return document.querySelector(".book > h1:nth-child(2)").innerText.replace("全文免费阅读", "").trim();
+  },
+
+  author() {
+    return document.querySelector(".small > span:nth-child(1) > a:nth-child(1)").innerText.trim();
+  },
+
+  intro: async () => {
+    const indexUrl = document.location.href.replace(/\d+\/(\d+\/index\.html)$/, "$1").replace("/index", "");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('.con').innerText.trim()", "GBK");
+  },
+
+  linkList() {
+    return document.querySelectorAll(".list > ul:nth-child(2) > li > a");
+  },
+
+  coverUrl: async () => {
+    const indexUrl = document.location.href.replace(/\d+\/(\d+\/index\.html)$/, "$1").replace("/index", "");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('#BookImage').src", "GBK");
+  },
+  chapterName: function chapterName(doc) {
+    let chapterNameDom = doc.querySelector("#changebgcolor > dl > dt > h1");
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("a", false, chapterNameDom);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("span", false, chapterNameDom);
+    return chapterNameDom.innerText.replace("《》", "").trim();
+  },
+  content: async function content(doc) {
+    const url = doc.baseURI;
+    let contents = [];
+    let tmpContent;
+    let nextPageObj;
+    [tmpContent, nextPageObj] = parser(doc);
+    contents.push(tmpContent);
+
+    while (nextPageObj.existNextPage) {
+      [tmpContent, nextPageObj] = await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(nextPageObj.nextPageUrl, "(".concat(parser.toString(), ")(doc)"), "GBK");
+      contents.push(tmpContent);
+    }
+
+    let finContent = document.createElement("div");
+
+    for (let c of contents) {
+      finContent.innerHTML = finContent.innerHTML + c.innerHTML.trim();
+    }
+
+    return finContent;
+
+    function parser(doc) {
+      let content = doc.querySelector("#changebgcolor > dl > dd");
+      const nextPage = doc.querySelector(".page > ul:nth-child(1) > li:nth-child(3) > a:nth-child(1)");
+      let nextPageObj;
+
+      if (nextPage.href.match(/[\d_]+\.html$/) && nextPage.href.match(/[\d_]+\.html$/)[0].includes("_")) {
+        nextPageObj = {
+          existNextPage: true,
+          nextPageUrl: nextPage.href
+        };
+      } else {
+        nextPageObj = {
+          existNextPage: false,
+          nextPageUrl: null
+        };
+      }
+
+      for (let s of [".font", "div[style]", "div.page", "div#wc2"]) {
+        content.querySelectorAll(s).length !== 0 && content.querySelectorAll(s).forEach(e => e.remove());
+      }
+
+      content.innerHTML = content.innerHTML.replace("\u3010<a href=\"http://bianshenbaihe.qinliugan.org\">\u53D8\u8EAB\u767E\u5408\u5C0F\u8BF4\u7F51</a>TXT\u65E0\u5F39\u7A97\u9605\u8BFB\u63A8\u8350\uFF01\u3011", "");
+      return [content, nextPageObj];
+    }
+  },
+  charset: "GBK"
 }]]);
 [{
   "mainHost": "book.zongheng.com",

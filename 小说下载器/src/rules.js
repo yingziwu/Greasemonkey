@@ -630,6 +630,63 @@ let rules = new Map([
       rm("div.chaper-info", false, content);
       return content;
     }
+  }],
+  ["bianshenbaihe.szalsaf.com", {
+    bookname() { return document.querySelector(".book > h1:nth-child(2)").innerText.replace("全文免费阅读", "").trim(); },
+    author() { return document.querySelector(".small > span:nth-child(1) > a:nth-child(1)").innerText.trim(); },
+    intro: async () => {
+      const indexUrl = document.location.href.replace(/\d+\/(\d+\/index\.html)$/, "$1").replace("/index", "");
+      return crossPage(indexUrl, "doc.querySelector('.con').innerText.trim()", "GBK");
+    },
+    linkList() { return document.querySelectorAll(".list > ul:nth-child(2) > li > a") },
+    coverUrl: async () => {
+      const indexUrl = document.location.href.replace(/\d+\/(\d+\/index\.html)$/, "$1").replace("/index", "");
+      return crossPage(indexUrl, "doc.querySelector('#BookImage').src", "GBK");
+    },
+    chapterName: function (doc) {
+      let chapterNameDom = doc.querySelector("#changebgcolor > dl > dt > h1");
+      rm("a", false, chapterNameDom);
+      rm("span", false, chapterNameDom);
+      return chapterNameDom.innerText.replace("《》", "").trim();
+    },
+    content: async function (doc) {
+      const url = doc.baseURI;
+      let contents = [];
+      let tmpContent;
+      let nextPageObj;
+      [tmpContent, nextPageObj] = parser(doc);
+      contents.push(tmpContent);
+
+      while (nextPageObj.existNextPage) {
+        [tmpContent, nextPageObj] = await crossPage(nextPageObj.nextPageUrl, `(${parser.toString()})(doc)`, "GBK");
+        contents.push(tmpContent);
+      }
+
+      let finContent = document.createElement("div");
+      for (let c of contents) {
+        finContent.innerHTML = finContent.innerHTML + c.innerHTML.trim();
+      }
+      return finContent;
+
+      function parser(doc) {
+        let content = doc.querySelector("#changebgcolor > dl > dd");
+
+        const nextPage = doc.querySelector(".page > ul:nth-child(1) > li:nth-child(3) > a:nth-child(1)");
+        let nextPageObj;
+        if (nextPage.href.match(/[\d_]+\.html$/) && nextPage.href.match(/[\d_]+\.html$/)[0].includes("_")) {
+          nextPageObj = { existNextPage: true, nextPageUrl: nextPage.href }
+        } else {
+          nextPageObj = { existNextPage: false, nextPageUrl: null }
+        }
+
+        for (let s of [".font", "div[style]", "div.page", "div#wc2"]) {
+          content.querySelectorAll(s).length !== 0 && content.querySelectorAll(s).forEach(e => e.remove());
+        }
+        content.innerHTML = content.innerHTML.replace(`【<a href="http://bianshenbaihe.qinliugan.org">变身百合小说网</a>TXT无弹窗阅读推荐！】`, "");
+        return [content, nextPageObj];
+      }
+    },
+    charset: "GBK"
   }]
 ]);
 
