@@ -31,7 +31,7 @@
 // @grant       GM_openInTab
 // @grant       GM_registerMenuCommand
 // @run-at      document-end
-// @version     1.10.0
+// @version     2.0.0
 // @author      bgme
 // @description 测试小说下载器。
 // ==/UserScript==
@@ -101,23 +101,25 @@ function openTab() {
 function testCallback(obj) {
   document.body.innerHTML = `
   <style type="text/css">
+  @import url(https://fonts.googleapis.com/css?family=ZCOOL+XiaoWei);
   body {
-      background-color: #f0f0f2;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #f0f0f2;
+    margin: 0;
+    padding: 0;
+    --font-family: -apple-system, "Noto Sans", "Helvetica Neue", Helvetica, "Nimbus Sans L", Arial, "Liberation Sans", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Source Han Sans CN", "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei", "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;;
+    font-size: 1rem;
   }
   div.main {
-      width: 600px;
-      margin: 5em auto;
-      padding: 2em;
-      background-color: #fdfdff;
-      border-radius: 0.5em;
-      box-shadow: 2px 3px 7px 2px rgba(0,0,0,0.02);
+    width: 600px;
+    margin: 5em auto;
+    padding: 2em;
+    background-color: #fdfdff;
+    border-radius: 0.5em;
+    box-shadow: 2px 3px 7px 2px rgba(0,0,0,0.02);
   }
   a:link, a:visited {
-      color: #38488f;
-      text-decoration: none;
+    color: #38488f;
+    text-decoration: none;
   }
   h2 {
     line-height: 130%;
@@ -126,6 +128,8 @@ function testCallback(obj) {
     font-size: x-large;
     margin-top: 0.2em;
     margin-bottom: 0.3em;
+    font-family: 'ZCOOL XiaoWei', cursive;
+    padding-bottom: 0.3em;
   }
   p {
     text-indent: 2em;
@@ -133,32 +137,70 @@ function testCallback(obj) {
     line-height: 1.3em;
     margin-top: 0.4em;
     margin-bottom: 0.4em;
+    font-family: var(--font-family);
   }
   pre {
     white-space: pre-wrap;
     word-wrap: break-word;
+    font-family: var(--font-family);
+  }
+  .info, .linkList, .chapter {
+    padding: 2em 0;
+  }
+  .info {
+    padding-left: 1.5em;
+    padding-right: 1.5em;
+  }
+  .info img {
+    padding: 0.8em;
+  }
+  .linkList ul {
+    padding-left: 10em;
+  }
+  #toc {
+    position: fixed;
+    right: 5%;
+    bottom: 30%;
+    background-color: rgba(255,255,255,0.7);
+    border-radius: 0.8em;
+  }
+  #toc ul {
+    padding: 1.3em;
   }
   @media (max-width: 700px) {
-      div.main {
-          margin: 0 auto;
-          width: auto;
-      }
+    div.main {
+        margin: 0 auto;
+        width: auto;
+    }
   }
   </style>
   <div class="main">
-    <div><p><img src="${obj.coverImg.src}" /></p></div>
-    <div><pre>${obj.infoText}</pre></div>
-    <div><br/></div>
-    <div><ul id="linkList"></ul></div>
-    <div><br/></div>
+    <div class="toc" id="toc">
+      <ul>
+        <li><a href="#info">作品信息</a></li>
+        <li><a href="#linkList">章节列表</a></li>
+        <li><a href="#txt">txt文本预览</a></li>
+        <li><a href="#html">HTML文本预览</a></li>
+      </ul>
+    </div>
+    <div class="info" id="info">
+      <div><img src="${obj.coverImg.src}" /></div>
+      <div><pre>${obj.infoText}</pre></div>
+    </div>
     <hr/>
-    <div><br/></div>
-    <pre>${obj.pageObj.txt}</pre>
-    <div><br/></div>
-    <div><br/></div>
+    <div class="linkList">
+      <ul id="linkList"></ul>
+    </div>
     <hr/>
-    <h2>${obj.pageObj.chapterName}</h2>
-    <div>${obj.pageObj.dom.innerHTML}</div>
+    <div class="chapter txt" id="txt">
+      <h2>${obj.pageObj.chapterName}</h2>
+      <pre>${obj.pageObj.txt}</pre>
+    </div>
+    <hr/>
+      <div class="chapter html" id="html">
+      <h2>${obj.pageObj.chapterName}</h2>
+      <div>${obj.pageObj.dom.innerHTML}</div>
+    </div>
   </div>
     `;
   let l = document.querySelector("#linkList");
