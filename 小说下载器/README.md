@@ -19,7 +19,7 @@
 <!-- prettier-ignore -->
 - [起点](https://www.qidian.com/)、[纵横](http://www.zongheng.com/)、[17k](https://www.17k.com/)、[晋江](http://www.jjwxc.net/)、[书海](http://www.shuhai.com/)、[SF轻小说](http://book.sfacg.com/)、[刺猬猫](https://www.ciweimao.com)的免费章节
 <!-- prettier-ignore -->
-- [亿软小说](http://www.yruan.com/)、[精彩小说网](https://www.jingcaiyuedu.com/)、[书趣阁](http://www.shuquge.com/)、[顶点小说](https://www.dingdiann.com/)、[2k小说阅读网](https://www.fpzw.com/)、[和图书](https://www.hetushu.com/)、[笔趣窝](http://www.biquwo.org/)、[星空文学](http://www.xkzw.org/)、[手打吧](http://www.shouda8.com/)、[阁笔趣](http://www.gebiqu.com/)、[米趣小说](https://www.meegoq.com/)、[变身小说网](http://bianshenbaihe.szalsaf.com/)
+- [亿软小说](http://www.yruan.com/)、[精彩小说网](https://www.jingcaiyuedu.com/)、[书趣阁](http://www.shuquge.com/)、[顶点小说](https://www.dingdiann.com/)、[2k小说阅读网](https://www.fpzw.com/)、[和图书](https://www.hetushu.com/)、[笔趣窝](http://www.biquwo.org/)、[星空文学](http://www.xkzw.org/)、[手打吧](http://www.shouda8.com/)、[阁笔趣](http://www.gebiqu.com/)、[米趣小说](https://www.meegoq.com/)、[变身小说网](http://bianshenbaihe.szalsaf.com/)、[笔趣阁](https://www.biquge.tw/)
 
 ## 添加更多网站
 

@@ -687,6 +687,15 @@ let rules = new Map([
       }
     },
     charset: "GBK"
+  }],
+  ["www.biquge.tw", {
+    bookname() { return document.querySelector("#info > h1").innerText.trim(); },
+    author() { return document.querySelector("#info > p:nth-child(2)").innerText.replace(/作\s+者：/, "").trim(); },
+    intro() { return convertDomNode(document.querySelector("#intro"))[0]; },
+    linkList() { return includeLatestChapter("#list > dl:nth-child(1)"); },
+    coverUrl() { return document.querySelector("#fmimg > img").src; },
+    chapterName: function (doc) { return doc.querySelector(".bookname > h1:nth-child(1)").innerText.trim(); },
+    content: function (doc) { return doc.querySelector("#content"); }
   }]
 ]);
 

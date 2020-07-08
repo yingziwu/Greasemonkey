@@ -26,6 +26,7 @@
 // @match       http://www.shuhai.com/book/*.htm
 // @match       http://mm.shuhai.com/book/*.htm
 // @match       http://bianshenbaihe.szalsaf.com/txt/*/index.html
+// @match       https://www.biquge.tw/*/
 // @grant       unsafeWindow
 // @grant       GM_info
 // @grant       GM_xmlhttpRequest
@@ -44,7 +45,7 @@
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.4.8
+// @version     2.0.5.0
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -2028,6 +2029,33 @@ let rules = new Map([["www.yruan.com", {
     }
   },
   charset: "GBK"
+}], ["www.biquge.tw", {
+  bookname() {
+    return document.querySelector("#info > h1").innerText.trim();
+  },
+
+  author() {
+    return document.querySelector("#info > p:nth-child(2)").innerText.replace(/作\s+者：/, "").trim();
+  },
+
+  intro() {
+    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
+  },
+
+  linkList() {
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "c"])("#list > dl:nth-child(1)");
+  },
+
+  coverUrl() {
+    return document.querySelector("#fmimg > img").src;
+  },
+
+  chapterName: function chapterName(doc) {
+    return doc.querySelector(".bookname > h1:nth-child(1)").innerText.trim();
+  },
+  content: function content(doc) {
+    return doc.querySelector("#content");
+  }
 }]]);
 [{
   "mainHost": "book.zongheng.com",
