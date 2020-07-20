@@ -20,7 +20,7 @@ import { ruleTest } from "./debug";
 
 window.addEventListener("DOMContentLoaded", async function () {
   console.log(
-    `开始载入小说下载器……\n当前脚本管理器：${GM_info.scriptHandler}\n当前脚本管理器版本：${GM_info.version}\n当前脚本版本：${GM_info.script.version}\n是否开启调试模式：${enableDebug}`
+    `开始载入小说下载器……\n当前脚本管理器：${GM_info.scriptHandler}\n当前脚本管理器版本：${GM_info.version}\n当前脚本版本：${GM_info.script.version}\n当前浏览器：${navigator.userAgent}\n是否开启调试模式：${enableDebug}`
   );
   if (enableDebug) {
     debug();

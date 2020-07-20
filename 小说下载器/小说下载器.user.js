@@ -47,7 +47,7 @@
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.6.4
+// @version     2.0.6.5
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -2226,7 +2226,7 @@ async function ruleTest(rule, callback) {
 
 
 window.addEventListener("DOMContentLoaded", async function () {
-  console.log("\u5F00\u59CB\u8F7D\u5165\u5C0F\u8BF4\u4E0B\u8F7D\u5668\u2026\u2026\n\u5F53\u524D\u811A\u672C\u7BA1\u7406\u5668\uFF1A".concat(GM_info.scriptHandler, "\n\u5F53\u524D\u811A\u672C\u7BA1\u7406\u5668\u7248\u672C\uFF1A").concat(GM_info.version, "\n\u5F53\u524D\u811A\u672C\u7248\u672C\uFF1A").concat(GM_info.script.version, "\n\u662F\u5426\u5F00\u542F\u8C03\u8BD5\u6A21\u5F0F\uFF1A").concat(setting["c" /* enableDebug */]));
+  console.log("\u5F00\u59CB\u8F7D\u5165\u5C0F\u8BF4\u4E0B\u8F7D\u5668\u2026\u2026\n\u5F53\u524D\u811A\u672C\u7BA1\u7406\u5668\uFF1A".concat(GM_info.scriptHandler, "\n\u5F53\u524D\u811A\u672C\u7BA1\u7406\u5668\u7248\u672C\uFF1A").concat(GM_info.version, "\n\u5F53\u524D\u811A\u672C\u7248\u672C\uFF1A").concat(GM_info.script.version, "\n\u5F53\u524D\u6D4F\u89C8\u5668\uFF1A").concat(navigator.userAgent, "\n\u662F\u5426\u5F00\u542F\u8C03\u8BD5\u6A21\u5F0F\uFF1A").concat(setting["c" /* enableDebug */]));
 
   if (setting["c" /* enableDebug */]) {
     debug();
