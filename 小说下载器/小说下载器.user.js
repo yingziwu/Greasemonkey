@@ -47,7 +47,7 @@
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.2.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.min.js
 // @run-at      document-end
-// @version     2.0.6.5
+// @version     2.0.7.1
 // @author      bgme
 // @description 一个可扩展的通用型小说下载器。目前支持起点、晋江、SF轻小说、刺猬猫等小说网站的免费章节，以及亿软小说、精彩小说网、书趣阁、顶点小说、2k小说阅读网、和图书、笔趣窝、星空文学、手打吧等转载网站。详细支持网站列表请打开说明页面。
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -226,14 +226,18 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return crossPage; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return gfetch; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return includeLatestChapter; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return rm; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return sleep; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return crossPage; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return gfetch; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return includeLatestChapter; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return rm; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return sleep; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return convertDomNode; });
+/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* eslint-disable no-eval */
 
 /* eslint-disable no-param-reassign */
+
+
 function rm(selector) {
   let All = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
   let doc = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : document;
@@ -341,6 +345,15 @@ async function crossPage(url, functionString) {
   return eval(functionString);
 }
 
+function convertDomNode(node) {
+  let txtOut = "";
+  let htmlOut = document.createElement("div");
+  let brc = 0;
+  [txtOut, htmlOut, brc] = Object(_main__WEBPACK_IMPORTED_MODULE_0__[/* walker */ "n"])(null, node.childNodes[0], node, brc, txtOut, htmlOut);
+  txtOut = txtOut.trim();
+  return [txtOut, htmlOut];
+}
+
 
 
 /***/ }),
@@ -348,20 +361,20 @@ async function crossPage(url, functionString) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return downloading; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "m", function() { return setDownloadingTrue; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "i", function() { return nowWorking; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() { return nowWorkingInc; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return convertDomNode; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "k", function() { return pageWorker; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "l", function() { return save; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "n", function() { return updateProgress; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return getMetadate; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return genPageTaskQueue; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return imgDownLoop; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() { return imgWorkerResolved; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return imgWorkerRejected; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return imgTaskQueueSet; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return downloading; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "l", function() { return setDownloadingTrue; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() { return nowWorking; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "i", function() { return nowWorkingInc; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() { return pageWorker; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "k", function() { return save; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "m", function() { return updateProgress; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return getMetadate; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return genPageTaskQueue; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return imgDownLoop; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return imgWorkerResolved; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return imgWorkerRejected; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return imgTaskQueueSet; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "n", function() { return walker; });
 /* harmony import */ var _lib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
 /* harmony import */ var _setting__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
 /* eslint-disable no-return-assign */
@@ -584,7 +597,7 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
 
   if (_setting__WEBPACK_IMPORTED_MODULE_1__[/* charset */ "b"] === undefined) {
     if (_setting__WEBPACK_IMPORTED_MODULE_1__[/* CORS */ "a"]) {
-      text = Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "b"])(url).then(response => {
+      text = Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "c"])(url).then(response => {
         if (response.status >= 200 && response.status <= 299) {
           return response.responseText;
         } else {
@@ -614,7 +627,7 @@ function pageWorker(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQu
     }
   } else {
     if (_setting__WEBPACK_IMPORTED_MODULE_1__[/* CORS */ "a"]) {
-      text = Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "b"])(url, {
+      text = Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "c"])(url, {
         responseType: "arraybuffer"
       }).then(response => {
         if (response.status >= 200 && response.status <= 299) {
@@ -705,11 +718,11 @@ async function extractData(id, url, text, rule, pageWorkerResolved) {
     content = rule.content(doc);
   }
 
-  Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('[style*="display:none"]', true, content);
-  Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('[style*="display: none"]', true, content);
+  Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('[style*="display:none"]', true, content);
+  Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('[style*="display: none"]', true, content);
   let txtOut;
   let htmlOut;
-  [txtOut, htmlOut] = convertDomNode(content);
+  [txtOut, htmlOut] = Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(content);
   pageWorkerResolved.set(id, {
     id: id,
     url: url,
@@ -754,7 +767,7 @@ function imgWorker(imgTask) {
   return new Promise((resolve, reject) => {
     if (corsDomains.has(host)) {
       imgNowWorking++;
-      Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "b"])(url, {
+      Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "c"])(url, {
         responseType: "blob"
       }).then(response => {
         if (imgNowWorking > 0) {
@@ -811,7 +824,7 @@ function imgWorker(imgTask) {
 
         retry++;
         imgNowWorking++;
-        Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "b"])(url, {
+        Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "c"])(url, {
           responseType: "blob"
         }).then(response => {
           if (imgNowWorking > 0) {
@@ -853,15 +866,6 @@ function imgWorker(imgTask) {
       });
     }
   });
-}
-
-function convertDomNode(node) {
-  let txtOut = "";
-  let htmlOut = document.createElement("div");
-  let brc = 0;
-  [txtOut, htmlOut, brc] = walker(null, node.childNodes[0], node, brc, txtOut, htmlOut);
-  txtOut = txtOut.trim();
-  return [txtOut, htmlOut];
 } // eslint-disable-next-line complexity
 
 
@@ -1099,9 +1103,7 @@ const icon1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return rules; });
 /* harmony import */ var _lib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-/* harmony import */ var _main__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1);
 /* eslint-disable no-eval */
-
 
 let rules = new Map([["www.yruan.com", {
   bookname() {
@@ -1113,7 +1115,7 @@ let rules = new Map([["www.yruan.com", {
   },
 
   intro() {
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(document.querySelector("#intro > p"))[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(document.querySelector("#intro > p"))[0];
   },
 
   linkList() {
@@ -1141,7 +1143,7 @@ let rules = new Map([["www.yruan.com", {
 
   intro: async () => {
     const indexUrl = document.location.href.replace(/\/list.html$/, ".html");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "convertDomNode(doc.querySelector('#bookIntro'))[0]");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "convertDomNode(doc.querySelector('#bookIntro'))[0]");
   },
 
   linkList() {
@@ -1150,7 +1152,7 @@ let rules = new Map([["www.yruan.com", {
 
   coverUrl: async () => {
     const indexUrl = document.location.href.replace(/\/list.html$/, ".html");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('.panel-body img').getAttribute('data-original')");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('.panel-body img').getAttribute('data-original')");
   },
   chapterName: function chapterName(doc) {
     return doc.querySelector("h1.readTitle").innerText.trim();
@@ -1177,11 +1179,11 @@ let rules = new Map([["www.yruan.com", {
   intro() {
     let iNode = document.querySelector(".intro");
     iNode.innerHTML = iNode.innerHTML.replace(/推荐地址：http:\/\/www.shuquge.com\/txt\/\d+\/index\.html/, "");
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(iNode)[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(iNode)[0];
   },
 
   linkList() {
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "c"])(".listmain > dl:nth-child(1)");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "d"])(".listmain > dl:nth-child(1)");
   },
 
   coverUrl() {
@@ -1206,11 +1208,11 @@ let rules = new Map([["www.yruan.com", {
   },
 
   intro() {
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
   },
 
   linkList() {
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "c"])("#list > dl");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "d"])("#list > dl");
   },
 
   coverUrl() {
@@ -1238,26 +1240,26 @@ let rules = new Map([["www.yruan.com", {
   intro: async () => {
     const indexUrl = document.location.href.replace(/xiaoshuo\/\d+\//, "");
     const charset = "GBK";
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "convertDomNode(doc.querySelector('.wright .Text'))[0]", charset);
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "convertDomNode(doc.querySelector('.wright .Text'))[0]", charset);
   },
 
   linkList() {
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "c"])(".book");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "d"])(".book");
   },
 
   coverUrl: async () => {
     const indexUrl = document.location.href.replace(/xiaoshuo\/\d+\//, "");
     const charset = "GBK";
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('div.bortable.wleft > img').src", charset);
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('div.bortable.wleft > img').src", charset);
   },
   chapterName: function chapterName(doc) {
     return doc.querySelector("h2").innerText.trim();
   },
   content: function content(doc) {
     let content = doc.querySelector(".Text");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])(".Text > a:nth-child(1)", false, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('.Text > font[color="#F00"]', false, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("strong.top_book", false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])(".Text > a:nth-child(1)", false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('.Text > font[color="#F00"]', false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("strong.top_book", false, content);
     return content;
   },
   charset: "GBK"
@@ -1271,7 +1273,7 @@ let rules = new Map([["www.yruan.com", {
   },
 
   intro() {
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(document.querySelector(".intro"))[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(document.querySelector(".intro"))[0];
   },
 
   linkList() {
@@ -1287,7 +1289,7 @@ let rules = new Map([["www.yruan.com", {
   },
   content: function content(doc) {
     let content = doc.querySelector("#content");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("h2", true, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("h2", true, content);
     return content;
   }
 }], ["www.biquwo.org", {
@@ -1300,11 +1302,11 @@ let rules = new Map([["www.yruan.com", {
   },
 
   intro() {
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
   },
 
   linkList() {
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "c"])("#list > dl:nth-child(1)");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "d"])("#list > dl:nth-child(1)");
   },
 
   coverUrl() {
@@ -1327,7 +1329,7 @@ let rules = new Map([["www.yruan.com", {
   },
 
   intro() {
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
   },
 
   linkList() {
@@ -1478,10 +1480,10 @@ let rules = new Map([["www.yruan.com", {
 
   intro() {
     let intro = document.querySelector(".intro");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])(".book_keywords");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("script", true);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("#cambrian0");
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(intro)[0];
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])(".book_keywords");
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("script", true);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("#cambrian0");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(intro)[0];
   },
 
   linkList() {
@@ -1497,7 +1499,7 @@ let rules = new Map([["www.yruan.com", {
   },
   content: function content(doc) {
     let content = doc.querySelector("#content");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("p:last-child", false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("p:last-child", false, content);
     return content;
   }
 }], ["book.qidian.com", {
@@ -1510,7 +1512,7 @@ let rules = new Map([["www.yruan.com", {
   },
 
   intro() {
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(document.querySelector(".book-info-detail .book-intro"))[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(document.querySelector(".book-info-detail .book-intro"))[0];
   },
 
   linkList: async () => {
@@ -1556,7 +1558,7 @@ let rules = new Map([["www.yruan.com", {
   intro: async () => {
     const bookid = unsafeWindow.HB.book.book_id;
     const indexUrl = "https://www.ciweimao.com/book/" + bookid;
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "convertDomNode(doc.querySelector('.book-intro-cnt .book-desc'))[0]");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "convertDomNode(doc.querySelector('.book-intro-cnt .book-desc'))[0]");
   },
 
   linkList() {
@@ -1567,10 +1569,10 @@ let rules = new Map([["www.yruan.com", {
   coverUrl: async () => {
     const bookid = unsafeWindow.HB.book.book_id;
     const indexUrl = "https://www.ciweimao.com/book/" + bookid;
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('.cover > img').src");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('.cover > img').src");
   },
   chapterName: function chapterName(doc) {
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("h3.chapter i", false, doc);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("h3.chapter i", false, doc);
     return doc.querySelector("h3.chapter").innerText.trim();
   },
   content: async function content(doc) {
@@ -1587,7 +1589,7 @@ let rules = new Map([["www.yruan.com", {
       div_chapter_author_say.appendChild(hr);
 
       for (let _chapter_author_say of _chapter_author_says) {
-        Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("i", true, _chapter_author_say);
+        Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("i", true, _chapter_author_say);
         div_chapter_author_say.appendChild(_chapter_author_say);
       }
     }
@@ -1608,12 +1610,12 @@ let rules = new Map([["www.yruan.com", {
         window.lock = false;
         break;
       } else {
-        await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* sleep */ "e"])(17);
+        await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* sleep */ "f"])(17);
       }
     }
 
     content.innerHTML = decryptDate;
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])(".chapter span", true, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])(".chapter span", true, content);
 
     if (_chapter_author_says.length !== 0) {
       content.appendChild(div_chapter_author_say);
@@ -1626,7 +1628,7 @@ let rules = new Map([["www.yruan.com", {
       const access_key_url = rootPath + "chapter/ajax_get_session_code";
       const chapter_content_url = rootPath + "chapter/get_book_chapter_detail_info";
       console.log("\u8BF7\u6C42 ".concat(access_key_url, " Referer ").concat(refererUrl));
-      const access_key_obj = await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "b"])(access_key_url, {
+      const access_key_obj = await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "c"])(access_key_url, {
         method: "POST",
         headers: {
           Accept: "application/json, text/javascript, */*; q=0.01",
@@ -1640,7 +1642,7 @@ let rules = new Map([["www.yruan.com", {
       }).then(response => response.response);
       const chapter_access_key = access_key_obj.chapter_access_key;
       console.log("\u8BF7\u6C42 ".concat(chapter_content_url, " Referer ").concat(refererUrl));
-      const chapter_content_obj = await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "b"])(chapter_content_url, {
+      const chapter_content_obj = await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* gfetch */ "c"])(chapter_content_url, {
         method: "POST",
         headers: {
           Accept: "application/json, text/javascript, */*; q=0.01",
@@ -1708,8 +1710,8 @@ let rules = new Map([["www.yruan.com", {
 
   intro() {
     let intro = document.querySelector("#novelintro");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("img", true, intro);
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(intro)[0];
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("img", true, intro);
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(intro)[0];
   },
 
   linkList() {
@@ -1725,14 +1727,14 @@ let rules = new Map([["www.yruan.com", {
   },
   content: function content(doc) {
     let content = doc.querySelector("div.noveltext");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("div:first-child", false, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('div[style="display:none"]', true, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("#favoriteshow_3", false, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('div[align="right"]', true, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('div[style="clear: both;"]', true, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('div[style="width:710px;height:70px;float:right;"]', true, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("div.noveltext div.readsmall  > hr", true, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("div:first-child", false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("div:first-child", false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('div[style="display:none"]', true, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("#favoriteshow_3", false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('div[align="right"]', true, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('div[style="clear: both;"]', true, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('div[style="width:710px;height:70px;float:right;"]', true, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("div.noveltext div.readsmall  > hr", true, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("div:first-child", false, content);
     return content;
   },
   charset: "GB18030"
@@ -1743,11 +1745,11 @@ let rules = new Map([["www.yruan.com", {
 
   author: async () => {
     const indexUrl = document.location.href.replace("/MainIndex/", "");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('.author-name').innerText.trim()");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('.author-name').innerText.trim()");
   },
   intro: async () => {
     const indexUrl = document.location.href.replace("/MainIndex/", "");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "convertDomNode(doc.querySelector('.introduce'))[0]");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "convertDomNode(doc.querySelector('.introduce'))[0]");
   },
 
   linkList() {
@@ -1756,7 +1758,7 @@ let rules = new Map([["www.yruan.com", {
 
   coverUrl: async () => {
     const indexUrl = document.location.href.replace("/MainIndex/", "");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('#hasTicket div.pic img').src");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('#hasTicket div.pic img').src");
   },
   chapterName: function chapterName(doc) {
     return doc.querySelector("h1.article-title").innerText.trim();
@@ -1776,12 +1778,12 @@ let rules = new Map([["www.yruan.com", {
   intro() {
     let intro = document.querySelector("#intro");
     intro.innerHTML = intro.innerHTML.replace(/如果您喜欢.+，别忘记分享给朋友/, "");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('a[href^="http://down.gebiqu.com"]', false, intro);
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(intro)[0];
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('a[href^="http://down.gebiqu.com"]', false, intro);
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(intro)[0];
   },
 
   linkList() {
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "c"])("#list > dl:nth-child(1)");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "d"])("#list > dl:nth-child(1)");
   },
 
   coverUrl() {
@@ -1803,11 +1805,11 @@ let rules = new Map([["www.yruan.com", {
 
   author: async () => {
     const indexUrl = document.location.href.replace("/book", "/info");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('article.info > p.detail.pt20 > i:nth-child(1) > a').innerText.trim()");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('article.info > p.detail.pt20 > i:nth-child(1) > a').innerText.trim()");
   },
   intro: async () => {
     const indexUrl = document.location.href.replace("/book", "/info");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "(() => {\n              let intro = doc.querySelector(\"article.info > p.desc\");\n              rm('b',false,intro);\n              return convertDomNode(intro)[0];\n            })()");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "(() => {\n              let intro = doc.querySelector(\"article.info > p.desc\");\n              rm('b',false,intro);\n              return convertDomNode(intro)[0];\n            })()");
   },
 
   linkList() {
@@ -1837,7 +1839,7 @@ let rules = new Map([["www.yruan.com", {
 
   coverUrl: async () => {
     const indexUrl = document.location.href.replace("/book", "/info");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('article.info > div.cover > img').src");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('article.info > div.cover > img').src");
   },
   chapterName: function chapterName(doc) {
     return doc.querySelector("article > header > h1").innerText.trim();
@@ -1858,7 +1860,7 @@ let rules = new Map([["www.yruan.com", {
 
   intro: async () => {
     const indexUrl = document.location.href.replace("/showchapter/", "/book/");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "convertDomNode(doc.querySelector('div.book-info > div.book-dec'))[0]");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "convertDomNode(doc.querySelector('div.book-info > div.book-dec'))[0]");
   },
 
   linkList() {
@@ -1867,7 +1869,7 @@ let rules = new Map([["www.yruan.com", {
 
   coverUrl: async () => {
     const indexUrl = document.location.href.replace("/showchapter/", "/book/");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('div.book-img > img').src");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('div.book-img > img').src");
   },
   chapterName: function chapterName(doc) {
     return doc.querySelector("div.title_txtbox").innerText.trim();
@@ -1886,7 +1888,7 @@ let rules = new Map([["www.yruan.com", {
 
   intro: async () => {
     const indexUrl = document.location.href.replace("/list/", "/book/");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "convertDomNode(doc.querySelector('#bookInfo p.intro > a'))[0]");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "convertDomNode(doc.querySelector('#bookInfo p.intro > a'))[0]");
   },
 
   linkList() {
@@ -1896,17 +1898,17 @@ let rules = new Map([["www.yruan.com", {
 
   coverUrl: async () => {
     const indexUrl = document.location.href.replace("/list/", "/book/");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('#bookCover img.book').src.replace('http://','https://')");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('#bookCover img.book').src.replace('http://','https://')");
   },
   chapterName: function chapterName(doc) {
     return doc.querySelector("#readArea > div.readAreaBox.content > h1").innerText.trim();
   },
   content: function content(doc) {
     let content = doc.querySelector("#readArea > div.readAreaBox.content > div.p");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('p.copy', false, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('#banner_content', false, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('div.qrcode', false, content);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])('div.chapter_text_ad', false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('p.copy', false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('#banner_content', false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('div.qrcode', false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])('div.chapter_text_ad', false, content);
     return content;
   }
 }], ["www.shuhai.com", {
@@ -1920,7 +1922,7 @@ let rules = new Map([["www.yruan.com", {
 
   intro() {
     let intro = document.querySelector("div.book-info-bookintro") || document.querySelector("div.book-info-bookintro-all");
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(intro)[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(intro)[0];
   },
 
   linkList: async () => {
@@ -1953,7 +1955,7 @@ let rules = new Map([["www.yruan.com", {
   },
   content: function content(doc) {
     let content = doc.querySelector("#reader-content > div:nth-child(1)");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("div.chaper-info", false, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("div.chaper-info", false, content);
     return content;
   }
 }], ["bianshenbaihe.szalsaf.com", {
@@ -1967,7 +1969,7 @@ let rules = new Map([["www.yruan.com", {
 
   intro: async () => {
     const indexUrl = document.location.href.replace(/\d+\/(\d+\/index\.html)$/, "$1").replace("/index", "");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('.con').innerText.trim()", "GBK");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('.con').innerText.trim()", "GBK");
   },
 
   linkList() {
@@ -1976,12 +1978,12 @@ let rules = new Map([["www.yruan.com", {
 
   coverUrl: async () => {
     const indexUrl = document.location.href.replace(/\d+\/(\d+\/index\.html)$/, "$1").replace("/index", "");
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(indexUrl, "doc.querySelector('#BookImage').src", "GBK");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(indexUrl, "doc.querySelector('#BookImage').src", "GBK");
   },
   chapterName: function chapterName(doc) {
     let chapterNameDom = doc.querySelector("#changebgcolor > dl > dt > h1");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("a", false, chapterNameDom);
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])("span", false, chapterNameDom);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("a", false, chapterNameDom);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])("span", false, chapterNameDom);
     return chapterNameDom.innerText.replace("《》", "").trim();
   },
   content: async function content(doc) {
@@ -1993,7 +1995,7 @@ let rules = new Map([["www.yruan.com", {
     contents.push(tmpContent);
 
     while (nextPageObj.existNextPage) {
-      [tmpContent, nextPageObj] = await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "a"])(nextPageObj.nextPageUrl, "(".concat(parser.toString(), ")(doc)"), "GBK");
+      [tmpContent, nextPageObj] = await Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* crossPage */ "b"])(nextPageObj.nextPageUrl, "(".concat(parser.toString(), ")(doc)"), "GBK");
       contents.push(tmpContent);
     }
 
@@ -2041,11 +2043,11 @@ let rules = new Map([["www.yruan.com", {
   },
 
   intro() {
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(document.querySelector("#intro"))[0];
   },
 
   linkList() {
-    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "c"])("#list > dl:nth-child(1)");
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* includeLatestChapter */ "d"])("#list > dl:nth-child(1)");
   },
 
   coverUrl() {
@@ -2070,7 +2072,7 @@ let rules = new Map([["www.yruan.com", {
   intro() {
     let intro = document.querySelector("dd.jieshao_content > h3");
     intro.innerHTML = intro.innerHTML.replace(/^.+简介：\s+www.uukanshu.com\s+/, "").replace(/\s+https:\/\/www.uukanshu.com/, "").replace(/－+/, "");
-    return Object(_main__WEBPACK_IMPORTED_MODULE_1__[/* convertDomNode */ "a"])(intro)[0];
+    return Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* convertDomNode */ "a"])(intro)[0];
   },
 
   linkList() {
@@ -2093,7 +2095,7 @@ let rules = new Map([["www.yruan.com", {
   },
   content: function content(doc) {
     let content = doc.querySelector("#contentbox");
-    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "d"])(".ad_content", true, content);
+    Object(_lib__WEBPACK_IMPORTED_MODULE_0__[/* rm */ "e"])(".ad_content", true, content);
     let contentReplace = [/[ＵｕUu]+看书\s*[wｗ]+.[ＵｕUu]+[kｋ][aａ][nｎ][ｓs][hｈ][ＵｕUu].[nｎ][eｅ][tｔ]/g, /[ＵｕUu]+看书\s*[wｗ]+.[ＵｕUu]+[kｋ][aａ][nｎ][ｓs][hｈ][ＵｕUu].[cＣｃ][oＯｏ][mＭｍ]/g, /[UＵ]*看书[（\\(].*?[）\\)]文字首发。/, "请记住本书首发域名：。", "笔趣阁手机版阅读网址：", "小说网手机版阅读网址：", "https://", "http://"];
 
     for (let r of contentReplace) {
@@ -2162,7 +2164,7 @@ async function ruleTest(rule, callback) {
   let cover;
   let sourceUrl;
   let infoText;
-  [bookname, author, intro, linkList, cover, sourceUrl, infoText] = await Object(main["d" /* getMetadate */])(rule);
+  [bookname, author, intro, linkList, cover, sourceUrl, infoText] = await Object(main["c" /* getMetadate */])(rule);
   console.log("infoText:\n".concat(infoText));
   console.log("cover: ", cover);
   console.log("linkList: ", linkList);
@@ -2201,7 +2203,7 @@ async function ruleTest(rule, callback) {
       const pageTask = pageTaskQueue.pop();
 
       if (pageTask) {
-        Object(main["k" /* pageWorker */])(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
+        Object(main["j" /* pageWorker */])(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
       }
     } else {
       clearInterval(loopId);
@@ -2255,10 +2257,10 @@ function addButton() {
   img.style.cssText = "height: 2em;";
 
   button.onclick = function () {
-    if (main["b" /* downloading */]) {
+    if (main["a" /* downloading */]) {
       alert("正在下载中，请耐心等待……");
     } else {
-      Object(main["m" /* setDownloadingTrue */])();
+      Object(main["l" /* setDownloadingTrue */])();
       img.src = setting["e" /* icon1 */];
       console.log("开始下载……");
       run_main(setting["i" /* rule */]);
@@ -2277,37 +2279,37 @@ async function run_main(rule) {
   let cover;
   let sourceUrl;
   let infoText;
-  [bookname, author, intro, linkList, cover, sourceUrl, infoText] = await Object(main["d" /* getMetadate */])(rule);
+  [bookname, author, intro, linkList, cover, sourceUrl, infoText] = await Object(main["c" /* getMetadate */])(rule);
   const pageNum = linkList.length;
-  let pageTaskQueue = Object(main["c" /* genPageTaskQueue */])(linkList);
+  let pageTaskQueue = Object(main["b" /* genPageTaskQueue */])(linkList);
   let pageWorkerResolved = new Map();
   let pageWorkerRejected = new Map();
   let loopId = setInterval(loop, 300);
-  let imgLoopId = setInterval(main["e" /* imgDownLoop */], 800);
+  let imgLoopId = setInterval(main["d" /* imgDownLoop */], 800);
 
   function loop() {
     let finishNum = pageWorkerResolved.size + pageWorkerRejected.size;
-    let finishImgNum = main["h" /* imgWorkerResolved */].size + main["g" /* imgWorkerRejected */].size;
+    let finishImgNum = main["g" /* imgWorkerResolved */].size + main["f" /* imgWorkerRejected */].size;
 
-    if (finishNum !== pageNum || finishImgNum !== main["f" /* imgTaskQueueSet */].size) {
-      Object(main["n" /* updateProgress */])(finishNum, pageNum, finishImgNum, main["f" /* imgTaskQueueSet */].size);
+    if (finishNum !== pageNum || finishImgNum !== main["e" /* imgTaskQueueSet */].size) {
+      Object(main["m" /* updateProgress */])(finishNum, pageNum, finishImgNum, main["e" /* imgTaskQueueSet */].size);
 
-      for (let i = main["i" /* nowWorking */]; i < setting["f" /* maxConcurrency */]; i++) {
+      for (let i = main["h" /* nowWorking */]; i < setting["f" /* maxConcurrency */]; i++) {
         const pageTask = pageTaskQueue.pop();
 
         if (pageTask) {
-          Object(main["j" /* nowWorkingInc */])();
+          Object(main["i" /* nowWorkingInc */])();
           console.log("\u5F00\u59CB\u4E0B\u8F7D\uFF1A".concat(pageTask.id, "\t").concat(pageTask.dom.innerText, "\t").concat(pageTask.url, "\t\u7B2C").concat(pageTask.retry, "\u6B21\u91CD\u8BD5"));
-          Object(main["k" /* pageWorker */])(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
+          Object(main["j" /* pageWorker */])(pageTask, pageWorkerResolved, pageWorkerRejected, pageTaskQueue, rule);
         } else {
           break;
         }
       }
     } else {
-      Object(main["n" /* updateProgress */])(finishNum, pageNum, finishImgNum, main["f" /* imgTaskQueueSet */].size);
+      Object(main["m" /* updateProgress */])(finishNum, pageNum, finishImgNum, main["e" /* imgTaskQueueSet */].size);
       clearInterval(loopId);
       clearInterval(imgLoopId);
-      Object(main["l" /* save */])(pageWorkerResolved, pageWorkerRejected, bookname, author, infoText, cover, pageNum);
+      Object(main["k" /* save */])(pageWorkerResolved, pageWorkerRejected, bookname, author, infoText, cover, pageNum);
     }
   }
 }
@@ -2315,9 +2317,9 @@ async function run_main(rule) {
 function debug() {
   unsafeWindow.rule = setting["i" /* rule */];
   unsafeWindow.main = run_main;
-  unsafeWindow.convertDomNode = main["a" /* convertDomNode */];
+  unsafeWindow.convertDomNode = lib["a" /* convertDomNode */];
   unsafeWindow.ruleTest = ruleTest;
-  unsafeWindow.gfetch = lib["b" /* gfetch */];
+  unsafeWindow.gfetch = lib["c" /* gfetch */];
 }
 
 /***/ })

@@ -1,6 +1,8 @@
 /* eslint-disable no-eval */
 /* eslint-disable no-param-reassign */
 
+import { walker } from "./main";
+
 function rm(
   selector: string,
   All = false,
@@ -136,4 +138,20 @@ async function crossPage(
   return eval(functionString);
 }
 
-export { crossPage, gfetch, includeLatestChapter, rm, sleep };
+function convertDomNode(node) {
+  let txtOut = "";
+  let htmlOut = document.createElement("div");
+  let brc = 0;
+  [txtOut, htmlOut, brc] = walker(
+    null,
+    node.childNodes[0],
+    node,
+    brc,
+    txtOut,
+    htmlOut
+  );
+  txtOut = txtOut.trim();
+  return [txtOut, htmlOut];
+}
+
+export { crossPage, gfetch, includeLatestChapter, rm, sleep, convertDomNode };

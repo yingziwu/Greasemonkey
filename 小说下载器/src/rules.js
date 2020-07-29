@@ -1,6 +1,5 @@
 /* eslint-disable no-eval */
-import { crossPage, gfetch, includeLatestChapter, rm, sleep } from "./lib";
-import { convertDomNode } from "./main";
+import { crossPage, gfetch, includeLatestChapter, rm, sleep, convertDomNode } from "./lib";
 
 let rules = new Map([
   ["www.yruan.com", {

@@ -1,7 +1,7 @@
 /* eslint-disable no-return-assign */
 /* eslint-disable max-params */
 /* eslint-disable no-param-reassign */
-import { gfetch, rm } from "./lib";
+import { gfetch, rm, convertDomNode } from "./lib";
 import {
   enableDebug,
   rule,
@@ -586,22 +586,6 @@ function imgWorker(imgTask) {
   });
 }
 
-function convertDomNode(node) {
-  let txtOut = "";
-  let htmlOut = document.createElement("div");
-  let brc = 0;
-  [txtOut, htmlOut, brc] = walker(
-    null,
-    node.childNodes[0],
-    node,
-    brc,
-    txtOut,
-    htmlOut
-  );
-  txtOut = txtOut.trim();
-  return [txtOut, htmlOut];
-}
-
 // eslint-disable-next-line complexity
 function walker(p, n, r, brc, txtOut, htmlOut) {
   let pNodeName;
@@ -814,7 +798,6 @@ export {
   setDownloadingTrue,
   nowWorking,
   nowWorkingInc,
-  convertDomNode,
   pageWorker,
   save,
   updateProgress,
@@ -824,4 +807,5 @@ export {
   imgWorkerResolved,
   imgWorkerRejected,
   imgTaskQueueSet,
+  walker,
 };

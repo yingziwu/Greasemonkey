@@ -4,7 +4,6 @@ import {
   setDownloadingTrue,
   nowWorking,
   nowWorkingInc,
-  convertDomNode,
   pageWorker,
   save,
   updateProgress,
@@ -15,7 +14,7 @@ import {
   imgWorkerRejected,
   imgTaskQueueSet,
 } from "./main";
-import { gfetch } from "./lib";
+import { gfetch, convertDomNode } from "./lib";
 import { ruleTest } from "./debug";
 
 window.addEventListener("DOMContentLoaded", async function () {
