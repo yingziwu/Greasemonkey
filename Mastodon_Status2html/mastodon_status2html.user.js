@@ -1,10 +1,13 @@
 // ==UserScript==
 // @name        Mastodon status2html
 // @namespace   https://blog.bgme.me
-// @match        https://*/web/*
+// @match       https://*/web/*
+// @match       https://bgme.me/*
+// @match       https://bgme.bid/*
+// @match       https://c.bgme.bid/*
 // @grant       none
 // @run-at      document-end
-// @version     1.0.1
+// @version     1.0.2
 // @author      bgme
 // @description Save status to a html file.
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
