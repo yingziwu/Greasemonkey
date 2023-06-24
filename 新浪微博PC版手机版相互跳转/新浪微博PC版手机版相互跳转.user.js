@@ -153,7 +153,7 @@ WeiboUtil.str62to10 = function (str62) {
         var s = str62[i];
         i10 += this.str62keys.indexOf(s) * Math.pow(62, n);
     }
-    return i10;
+    return String(i10);
 };
 
 /**
