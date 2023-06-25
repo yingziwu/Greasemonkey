@@ -11,7 +11,7 @@
 // @exclude     https://weibo.com/signup/*
 // @grant       none
 // @run-at      document-end
-// @version     1.1.2
+// @version     1.1.3
 // @author      bgme
 // @description 点击右上角按钮，跳转至当前微博电脑版/手机版
 // @supportURL  https://github.com/yingziwu/Greasemonkey/issues
@@ -153,7 +153,7 @@ WeiboUtil.str62to10 = function (str62) {
         var s = str62[i];
         i10 += this.str62keys.indexOf(s) * Math.pow(62, n);
     }
-    return i10;
+    return String(i10);
 };
 
 /**
